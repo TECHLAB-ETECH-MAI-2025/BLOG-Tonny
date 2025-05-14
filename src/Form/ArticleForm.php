@@ -19,8 +19,10 @@ class ArticleForm extends AbstractType
             ->add('title', TextType::class, [
                 'label' => 'Titre',
                 'attr' => [
+                    'placeholder' => 'Titre',
+                    'autofocus' => true,
                     'class' => 'form-control',
-                    'placeholder' => 'Titre de l\'article'
+
                 ]
             ])
             ->add('content', TextareaType::class, [

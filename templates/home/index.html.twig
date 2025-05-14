@@ -2,53 +2,129 @@
 
 {% block title %}Accueil - Blog Symfony{% endblock %}
 
-{% block body %}
-    <div class="container">
-        <div class="row">
-            <div class="col-md-8">
-                <h1 class="mb-4">Derniers articles</h1>
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .blog-card {
+            border: 1px solid #eaeaea;
+            border-radius: 0;
+            background-color: #fff;
+        }
+        .category-badge {
+            font-size: 0.8rem;
+            color: #090909;
+            padding: .3rem;
+            border-radius:.5rem ;
+            background-color: #b1b1b1;
+        }
+        .blog-header {
+            border-bottom: 1px solid #eaeaea;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+        }
+        .read-more-link {
+            color: #333;
+        }
+        .category-sidebar {
+            border: 1px solid #eaeaea;
+        }
+        .category-header {
+            padding: 1rem;
+            border-bottom: 1px solid #eaeaea;
+        }
+        .category-link {
+            color: #333;
+            text-decoration: none;
+        }
+        .article-date {
+            color: #666;
+            font-size: 0.85rem;
+        }
+        .no-articles {
+            padding: 2rem;
+            text-align: center;
+            color: #666;
+            border: 1px solid #eaeaea;
+        }
+    </style>
+{% endblock %}
 
-                {% for article in articles %}
-                    <div class="card mb-4">
-                        <div class="card-body">
-                            <h2 class="h5 card-title">{{ article.title }}</h2>
-                            <p class="card-text">{{ article.content|length > 150 ? article.content|slice(0, 150) ~ '...' : article.content }}</p>
-                            <div class="mb-2">
-                                {% for category in article.categories %}
-                                    <span class="badge bg-light text-dark me-1">{{ category.name }}</span>
-                                {% endfor %}
+{% block body %}
+    <div class="container py-4">
+        <div class="blog-header">
+            <h1>Derniers articles</h1>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-8">
+                {% if articles|length > 0 %}
+                    <div class="row row-cols-1 g-4">
+                        {% for article in articles %}
+                            <div class="col">
+                                <div class="card blog-card">
+                                    <div class="card-body p-3">
+                                        <h2 class="card-title h5 mb-2">{{ article.title }}</h2>
+                                        <span class="article-date mb-2">
+                                            {{ article.createdAt|date("d/m/Y") }}
+                                        </span>
+
+                                        <div class="mb-2">
+                                            {% for category in article.categories %}
+                                                <span class="category-badge">{{ category.name }}</span>
+                                            {% endfor %}
+                                        </div>
+
+                                        <p class="card-text mb-3">
+                                            {{ article.content|length > 150 ? article.content|slice(0, 150) ~ '...' : article.content }}
+                                        </p>
+
+                                        <a href="{{ path('app_article_show', {'id': article.id}) }}" class="read-more-link">
+                                            Lire plus
+                                        </a>
+                                    </div>
+                                </div>
                             </div>
-                            <p class="card-text"><small class="text-muted">Publié le {{ article.createdAt|date("d/m/Y") }}</small></p>
-                            <a href="{{ path('app_article_show', {'id': article.id}) }}" class="btn btn-sm btn-link text-decoration-none">Lire plus</a>
-                        </div>
+                        {% endfor %}
                     </div>
                 {% else %}
-                    <p class="text-muted">Aucun article disponible.</p>
-                {% endfor %}
+                    <div class="no-articles">
+                        <p>Aucun article disponible.</p>
+                    </div>
+                {% endif %}
             </div>
-            {% if is_granted('ROLE_ADMIN') %}
-                 <div class="col-md-4">
-                <div class="card">
-                    <div class="card-header bg-white">
+
+            <div class="col-lg-4">
+                <div class="category-sidebar">
+                    <div class="category-header">
                         <h3 class="h6 mb-0">Catégories</h3>
                     </div>
-                    <ul class="list-group list-group-flush">
-                        {% for category in categories %}
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <a href="{{ path('app_category_show', {'id': category.id}) }}" class="text-decoration-none">{{ category.name }}</a>
-                                <span class="badge bg-light text-dark rounded-pill">{{ category.articles|length }}</span>
-                            </li>
-                        {% else %}
-                            <li class="list-group-item text-muted">Aucune catégorie disponible.</li>
-                        {% endfor %}
-                    </ul>
-                    <div class="card-footer bg-white">
-                        <a href="{{ path('app_category_new') }}" class="btn btn-sm btn-outline-success w-100">Créer une nouvelle catégorie</a>
-                    </div>
+
+                    {% if categories|length > 0 %}
+                        <ul class="list-group list-group-flush">
+                            {% for category in categories %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <a href="{{ path('app_category_show', {'id': category.id}) }}" class="category-link">
+                                        {{ category.name }}
+                                    </a>
+                                    <span class="badge bg-light text-dark">{{ category.articles|length }}</span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <div class="p-3 text-center text-muted">
+                            Aucune catégorie disponible.
+                        </div>
+                    {% endif %}
+
+                    {% if is_granted('ROLE_ADMIN') %}
+                        <div class="p-3 border-top">
+                            <a href="{{ path('app_category_new') }}" class="btn btn-outline-secondary btn-sm w-100">
+                                Nouvelle catégorie
+                            </a>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
-            {% endif %}
-
         </div>
     </div>
 {% endblock %}
