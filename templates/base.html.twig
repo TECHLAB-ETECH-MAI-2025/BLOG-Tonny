@@ -21,7 +21,7 @@
         }
     </style>
 </head>
-<body class="d-flex  flex-column min-vh-100">
+<body class="d-flex flex-column min-vh-100">
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
     <div class="container">
         <a class="navbar-brand" href="{{ path('app_home') }}">Blog Symfony</a>
@@ -33,12 +33,28 @@
                 <li class="nav-item">
                     <a class="nav-link" href="{{ path('app_home') }}">Accueil</a>
                 </li>
+            {% if is_granted('ROLE_ADMIN') %}
                 <li class="nav-item">
                     <a class="nav-link" href="{{ path('app_article_index') }}">Articles</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="{{ path('app_category_index') }}">Catégories</a>
                 </li>
+            {% endif %}
+            </ul>
+            <ul class="navbar-nav ms-auto">
+                {% if app.user %}
+                    <li class="nav-item">
+                        <span class="nav-link">Bonjour, {{ app.user.username }}</span>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ path('app_logout') }}">Se déconnecter</a>
+                    </li>
+                {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ path('app_login') }}">Se connecter</a>
+                    </li>
+                {% endif %}
             </ul>
         </div>
     </div>

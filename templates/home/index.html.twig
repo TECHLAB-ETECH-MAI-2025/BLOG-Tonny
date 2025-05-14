@@ -26,8 +26,8 @@
                     <p class="text-muted">Aucun article disponible.</p>
                 {% endfor %}
             </div>
-
-            <div class="col-md-4">
+            {% if is_granted('ROLE_ADMIN') %}
+                 <div class="col-md-4">
                 <div class="card">
                     <div class="card-header bg-white">
                         <h3 class="h6 mb-0">Catégories</h3>
@@ -47,6 +47,8 @@
                     </div>
                 </div>
             </div>
+            {% endif %}
+
         </div>
     </div>
 {% endblock %}
