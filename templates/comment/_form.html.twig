@@ -1,0 +1,7 @@
+{% block comment_form %}
+{{ form_start(form) }}
+    {{ form_row(form.author, {'attr': {'class': 'form-control mb-2'}}) }}
+    {{ form_row(form.content, {'attr': {'class': 'form-control mb-2', 'rows': 5}}) }}
+    <button class="btn btn-primary mt-2">{{ button_label|default('Ajouter un commentaire') }}</button>
+{{ form_end(form) }}
+{% endblock %}

@@ -1,0 +1,10 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Nouvelle catégorie{% endblock %}
+
+{% block body %}
+    <h1>Nouvelle catégorie</h1>
+
+    {{ include('category/_form.html.twig') }}
+    <a href="#" onclick="window.history.back(); return false;">Retour</a>
+{% endblock %}

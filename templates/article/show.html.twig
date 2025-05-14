@@ -1,0 +1,130 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ article.title }}{% endblock %}
+
+{% block body %}
+<article class="container py-4">
+    <header class="mb-4">
+        <h1 class="mb-3">{{ article.title }}</h1>
+        <div class="text-secondary mb-3">
+            <span>Publié le {{ article.createdAt|date("d/m/Y") }}</span>
+        </div>
+        <div class="categories mb-3">
+            {% for category in article.categories %}
+                <span class="badge bg-green text-dark me-1">{{ category.name }}</span>
+            {% endfor %}
+        </div>
+    </header>
+
+    <div class="article-content mb-4">
+        {{ article.content|raw }}
+    </div>
+
+    <section class="comments my-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="h5">Commentaires <span class="badge bg-light text-dark">{{ article.comments|length }}</span></h2>
+            <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#commentModal">
+                Ajouter un commentaire
+            </button>
+        </div>
+
+        {% if article.comments|length > 0 %}
+            <div class="comments-list">
+                {% for comment in article.comments %}
+                    <div class="card mb-3">
+                        <div class="card-body p-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h5 class="h6 mb-0">{{ comment.author }}</h5>
+                                <small class="text-muted">{{ comment.createdAt|date("d/m/Y") }}</small>
+                            </div>
+                            <p class="mb-0">{{ comment.content }}</p>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="alert alert-light text-center py-3">
+                <p class="mb-0">Aucun commentaire pour cet article.</p>
+            </div>
+        {% endif %}
+        <div class="d-flex justify-content-between border-top pt-3">
+            <a href="#" onclick="window.history.back(); return false;">Retour</a>
+        </div>
+    </section>
+</article>
+
+<div class="modal fade" id="commentModal" tabindex="-1" aria-labelledby="commentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-bottom-0">
+                <h5 class="modal-title" id="commentModalLabel">Ajouter un commentaire</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form action="{{ path('app_comment_new_for_article', {'id': article.id}) }}" method="post" class="comment-form">
+                    <div class="mb-3">
+                        <label for="comment_author" class="form-label">Votre nom</label>
+                        <input type="text" id="comment_author" name="comment[author]" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="comment_content" class="form-label">Votre commentaire</label>
+                        <textarea id="comment_content" name="comment[content]" class="form-control" rows="3" required></textarea>
+                    </div>
+                    <input type="hidden" name="article_id" value="{{ article.id }}">
+                    <div class="text-end">
+                        <button type="button" class="btn btn-sm btn-outline-secondary me-2" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-sm btn-primary">
+                            Publier
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const commentForm = document.querySelector('.comment-form');
+
+            commentForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+
+                fetch(this.action, {
+                    method: 'POST',
+                    body: new FormData(this),
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Erreur de réseau ou du serveur');
+                    }
+                    return response.text().then(text => {
+                        try {
+                            return JSON.parse(text);
+                        } catch (e) {
+                            console.error('Réponse non-JSON:', text);
+                            throw new Error('Format de réponse invalide');
+                        }
+                    });
+                })
+                .then(data => {
+                    if (data.success) {
+                        const modalElement = document.getElementById('commentModal');
+                        const modal = bootstrap.Modal.getInstance(modalElement);
+                        modal.hide();
+                        window.location.reload();
+                    } else {
+                        alert('Erreur lors de l\'ajout du commentaire : ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Erreur :', error);
+                    alert('Une erreur est survenue lors de l\'envoi du commentaire.');
+                });
+            });
+        });
+    </script>
+{% endblock %}

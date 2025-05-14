@@ -1,0 +1,52 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Accueil - Blog Symfony{% endblock %}
+
+{% block body %}
+    <div class="container">
+        <div class="row">
+            <div class="col-md-8">
+                <h1 class="mb-4">Derniers articles</h1>
+
+                {% for article in articles %}
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h2 class="h5 card-title">{{ article.title }}</h2>
+                            <p class="card-text">{{ article.content|length > 150 ? article.content|slice(0, 150) ~ '...' : article.content }}</p>
+                            <div class="mb-2">
+                                {% for category in article.categories %}
+                                    <span class="badge bg-light text-dark me-1">{{ category.name }}</span>
+                                {% endfor %}
+                            </div>
+                            <p class="card-text"><small class="text-muted">Publié le {{ article.createdAt|date("d/m/Y") }}</small></p>
+                            <a href="{{ path('app_article_show', {'id': article.id}) }}" class="btn btn-sm btn-link text-decoration-none">Lire plus</a>
+                        </div>
+                    </div>
+                {% else %}
+                    <p class="text-muted">Aucun article disponible.</p>
+                {% endfor %}
+            </div>
+
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header bg-white">
+                        <h3 class="h6 mb-0">Catégories</h3>
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        {% for category in categories %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <a href="{{ path('app_category_show', {'id': category.id}) }}" class="text-decoration-none">{{ category.name }}</a>
+                                <span class="badge bg-light text-dark rounded-pill">{{ category.articles|length }}</span>
+                            </li>
+                        {% else %}
+                            <li class="list-group-item text-muted">Aucune catégorie disponible.</li>
+                        {% endfor %}
+                    </ul>
+                    <div class="card-footer bg-white">
+                        <a href="{{ path('app_category_new') }}" class="btn btn-sm btn-outline-success w-100">Créer une nouvelle catégorie</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

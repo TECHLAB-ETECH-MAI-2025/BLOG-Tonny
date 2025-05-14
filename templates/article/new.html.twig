@@ -1,0 +1,11 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Article{% endblock %}
+
+{% block body %}
+    <h1>Créer un nouvel article</h1>
+
+    {{ include('article/_form.html.twig') }}
+
+    <a href="#" onclick="window.history.back(); return false;">Retour</a>
+{% endblock %}

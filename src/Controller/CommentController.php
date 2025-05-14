@@ -1,0 +1,126 @@
+<?php
+
+namespace App\Controller;
+
+use App\Entity\Comment;
+use App\Entity\Article;
+use App\Form\CommentForm;
+use App\Repository\ArticleRepository;
+use App\Repository\CommentRepository;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\Routing\Annotation\Route;
+
+#[Route('/comment')]
+class CommentController extends AbstractController
+{
+    #[Route('/', name: 'app_comment_index', methods: ['GET'])]
+    public function index(CommentRepository $commentRepository): Response
+    {
+        return $this->render('comment/index.html.twig', [
+            'comments' => $commentRepository->findAll(),
+        ]);
+    }
+
+    #[Route('/new', name: 'app_comment_new', methods: ['GET', 'POST'])]
+    public function new(Request $request, EntityManagerInterface $entityManager): Response
+    {
+        $comment = new Comment();
+        $form = $this->createForm(CommentForm::class, $comment);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $entityManager->persist($comment);
+            $entityManager->flush();
+
+            return $this->redirectToRoute('app_comment_index', [], Response::HTTP_SEE_OTHER);
+        }
+
+        return $this->render('comment/new.html.twig', [
+            'comment' => $comment,
+            'form' => $form,
+        ]);
+    }
+
+    #[Route('/new-for-article/{id}', name: 'app_comment_new_for_article', methods: ['POST'])]
+    public function newForArticle(Request $request, Article $article, EntityManagerInterface $entityManager): Response
+    {
+        // Spécifie explicitement que la réponse est du JSON
+        $response = new Response();
+        $response->headers->set('Content-Type', 'application/json');
+
+        // Créer un nouveau commentaire
+        $comment = new Comment();
+
+        // Récupérer les données du formulaire
+        $data = $request->request->all();
+        $commentData = $data['comment'] ?? [];
+
+        // Vérifier si les données nécessaires sont présentes
+        if (empty($commentData['author']) || empty($commentData['content'])) {
+            $response->setContent(json_encode([
+                'success' => false,
+                'message' => 'Auteur et contenu sont requis'
+            ]));
+            $response->setStatusCode(Response::HTTP_BAD_REQUEST);
+            return $response;
+        }
+
+        // Remplir le commentaire avec les données
+        $comment->setAuthor($commentData['author']);
+        $comment->setContent($commentData['content']);
+        $comment->setArticle($article);
+
+        // Persister le commentaire
+        $entityManager->persist($comment);
+        $entityManager->flush();
+
+        // Retourner une réponse JSON
+        $response->setContent(json_encode([
+            'success' => true,
+            'message' => 'Commentaire ajouté avec succès'
+        ]));
+
+        return $response;
+    }
+
+    #[Route('/{id}', name: 'app_comment_show', methods: ['GET'])]
+    public function show(Comment $comment): Response
+    {
+        return $this->render('comment/show.html.twig', [
+            'comment' => $comment,
+        ]);
+    }
+
+    #[Route('/{id}/edit', name: 'app_comment_edit', methods: ['GET', 'POST'])]
+    public function edit(Request $request, Comment $comment, EntityManagerInterface $entityManager): Response
+    {
+        $form = $this->createForm(CommentForm::class, $comment);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $entityManager->flush();
+
+            return $this->redirectToRoute('app_comment_index', [], Response::HTTP_SEE_OTHER);
+        }
+
+        return $this->render('comment/edit.html.twig', [
+            'comment' => $comment,
+            'form' => $form,
+        ]);
+    }
+
+    #[Route('/{id}', name: 'app_comment_delete', methods: ['POST'])]
+    public function delete(Request $request, Comment $comment, EntityManagerInterface $entityManager): Response
+    {
+        if ($this->isCsrfTokenValid('delete'.$comment->getId(), $request->request->get('_token'))) {
+            $entityManager->remove($comment);
+            $entityManager->flush();
+        }
+
+        return $this->redirectToRoute('app_comment_index', [], Response::HTTP_SEE_OTHER);
+    }
+}

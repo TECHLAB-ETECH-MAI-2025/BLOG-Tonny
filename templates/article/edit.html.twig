@@ -1,0 +1,12 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier l'article{% endblock %}
+
+{% block body %}
+    <h1>Editer cette article</h1>
+
+    {{ include('article/_form.html.twig', {'button_label': 'Mettre à jour'}) }}
+    {{ include('article/_delete_form.html.twig') }}
+
+    <a href="#" onclick="window.history.back(); return false;">Retour</a>
+{% endblock %}

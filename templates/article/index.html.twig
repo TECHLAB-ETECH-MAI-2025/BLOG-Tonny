@@ -1,0 +1,46 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Article index{% endblock %}
+
+{% block body %}
+    <h1>Article index</h1>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Titre</th>
+                <th>Contenu</th>
+                <th>Catégorie(s)</th>
+                <th>Publié le</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for article in articles %}
+            <tr>
+                <td>{{ article.id }}</td>
+                <td>{{ article.title }}</td>
+                <td>{{ article.content }}</td>
+                <td>
+                        <div class="mb-2">
+                            {% for category in article.categories %}
+                                <span class="badge text-bg-primary">{{ category.name }}</span>
+                            {% endfor %}
+                        </div>
+                </td>
+                <td>{{ article.createdAt|date("d/m/Y") }}</td>
+                <td>
+                    <a href="{{ path('app_article_edit', {'id': article.id}) }}">éditer</a>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="5">liste vide</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_article_new') }}">Créer un nouvel article</a>
+{% endblock %}
