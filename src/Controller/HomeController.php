@@ -22,9 +22,16 @@ final class HomeController extends AbstractController
         ]);
     }
 
+    /*Create once a super Admin*/
     #[Route('/create-my-blog-admin', name: 'create_my_blog_admin_url')]
     public function createAdmin(EntityManagerInterface $em, UserPasswordHasherInterface $hasher): Response
     {
+        $existingAdmin = $em->getRepository(User::class)->findOneBy(['email' => 'admin@admin.test']);
+
+        if ($existingAdmin) {
+            return new Response('Un administrateur existe déjà.');
+        }
+
         $user = new User();
         $user->setEmail('admin@admin.test')
              ->setUsername('admin')
