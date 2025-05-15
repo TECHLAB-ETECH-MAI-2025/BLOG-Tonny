@@ -2,35 +2,138 @@
 
 {% block title %}Liste des catégories{% endblock %}
 
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .category-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 2rem;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .category-table th {
+            background-color: #f8f9fa;
+            padding: 16px;
+            font-weight: 600;
+            text-align: left;
+            color: #495057;
+        }
+
+        .category-table td {
+            padding: 16px;
+            border-top: 1px solid #eaeaea;
+            vertical-align: middle;
+        }
+
+        .category-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .category-table tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .action-link {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .action-link:hover {
+            text-decoration: underline;
+        }
+
+        .page-title {
+            margin-bottom: 1.5rem;
+            text-align: center;
+            color: #333;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .btn-create {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            transition: background-color 0.2s;
+            font-weight: 500;
+        }
+
+        .btn-create:hover {
+            background-color: #218838;
+        }
+                .pagination-container {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            margin-top: 1.5rem;
+        }
+
+        .pagination-btn {
+            padding: 8px 16px;
+            background-color: #f8f9fa;
+            color: #495057;
+            border: 1px solid #dee2e6;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-left: 5px;
+            transition: all 0.2s;
+        }
+
+        .pagination-btn:hover {
+            background-color: #e9ecef;
+            color: #212529;
+        }
+    </style>
+{% endblock %}
+
 {% block body %}
-    <h1>Liste des catégories</h1>
+    <div class="container py-4">
+        <h1 class="page-title">Liste des catégories</h1>
 
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Id</th>
-                <th>Nom</th>
-                <th>Déscription</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-        {% for category in categories %}
-            <tr>
-                <td>{{ category.id }}</td>
-                <td>{{ category.name }}</td>
-                <td>{{ category.description }}</td>
-                <td>
-                    <a href="{{ path('app_category_edit', {'id': category.id}) }}">éditer</a>
-                </td>
-            </tr>
-        {% else %}
-            <tr>
-                <td colspan="4">Liste vide</td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+        <a href="{{ path('app_category_new') }}" class="btn-create">Créer une nouvelle catégorie</a>
 
-    <a href="{{ path('app_category_new') }}">Créer une nouvelle catégorie</a>
+        <table class="category-table">
+            <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>Nom</th>
+                    <th>Description</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for category in categories %}
+                <tr>
+                    <td>{{ category.id }}</td>
+                    <td>{{ category.name }}</td>
+                    <td>{{ category.description }}</td>
+                    <td>
+                        <a href="{{ path('app_category_edit', {'id': category.id}) }}" class="action-link">éditer</a>
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="4" style="text-align: center; padding: 20px;">Liste vide</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        <div class="pagination-container">
+            {% if page > 1 %}
+                <a href="{{ path('app_category_index', {page: page - 1}) }}" class="pagination-btn">← Précédent</a>
+            {% endif %}
+
+            {% if page < maxPage %}
+                <a href="{{ path('app_category_index', {page: page + 1}) }}" class="pagination-btn">Suivant →</a>
+            {% endif %}
+        </div>
+    </div>
 {% endblock %}

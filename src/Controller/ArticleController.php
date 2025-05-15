@@ -17,10 +17,15 @@ final class ArticleController extends AbstractController
 {
     #[Route(name: 'app_article_index', methods: ['GET'])]
     #[isGranted('ROLE_ADMIN')]
-    public function index(ArticleRepository $articleRepository): Response
+    public function index(ArticleRepository $articleRepository, Request $request): Response
     {
+        $page = $request->query->getInt('page', 1);
+        $articles = $articleRepository->paginateAticles($page, $limit = 2);
+        $maxPage = ceil($articles->count() / $limit);
         return $this->render('article/index.html.twig', [
-            'articles' => $articleRepository->findAll(),
+            'articles' => $articles,
+            'maxPage' => $maxPage,
+            'page' => $page,
         ]);
     }
 

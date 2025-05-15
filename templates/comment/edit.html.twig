@@ -1,13 +1,61 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Edit Comment{% endblock %}
+{% block title %}Éditer le commentaire{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .form-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 1rem;
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+{% endblock %}
 
 {% block body %}
-    <h1>Edit Comment</h1>
+    <div class="form-container">
+        <h1>Éditer le commentaire</h1>
 
-    {{ include('comment/_form.html.twig', {'button_label': 'Update'}) }}
+        {{ include('comment/_form.html.twig', {'button_label': 'Mettre à jour'}) }}
 
-    <a href="{{ path('app_comment_index') }}">back to list</a>
+        <a href="{{ path('app_comment_index') }}" class="back-link">Retour à la liste</a>
 
-    {{ include('comment/_delete_form.html.twig') }}
+        {{ include('comment/_delete_form.html.twig') }}
+    </div>
 {% endblock %}

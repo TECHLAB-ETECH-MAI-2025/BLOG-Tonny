@@ -13,19 +13,23 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/category')]
+#[isGranted('ROLE_ADMIN')]
 final class CategoryController extends AbstractController
 {
     #[Route(name: 'app_category_index', methods: ['GET'])]
-    #[isGranted('ROLE_ADMIN')]
-    public function index(CategoryRepository $categoryRepository): Response
+    public function index(CategoryRepository $categoryRepository,Request $request): Response
     {
+        $page = $request->query->getInt('page', 1);
+        $categories = $categoryRepository->paginateCategories($page, $limit = 2);
+        $maxPage = ceil($categories->count() / $limit);
         return $this->render('category/index.html.twig', [
-            'categories' => $categoryRepository->findAll(),
+            'categories' => $categories,
+            'maxPage' => $maxPage,
+            'page' => $page,
         ]);
     }
 
     #[Route('/new', name: 'app_category_new', methods: ['GET', 'POST'])]
-    #[isGranted('ROLE_ADMIN')]
     public function new(Request $request, EntityManagerInterface $entityManager): Response
     {
         $category = new Category();
@@ -55,7 +59,6 @@ final class CategoryController extends AbstractController
     }
 
     #[Route('/{id}/edit', name: 'app_category_edit', methods: ['GET', 'POST'])]
-    #[isGranted('ROLE_ADMIN')]
     public function edit(Request $request, Category $category, EntityManagerInterface $entityManager): Response
     {
         $form = $this->createForm(CategoryForm::class, $category);
@@ -75,7 +78,6 @@ final class CategoryController extends AbstractController
     }
 
     #[Route('/{id}', name: 'app_category_delete', methods: ['POST'])]
-    #[isGranted('ROLE_ADMIN')]
     public function delete(Request $request, Category $category, EntityManagerInterface $entityManager): Response
     {
         if ($this->isCsrfTokenValid('delete'.$category->getId(), $request->getPayload()->getString('_token'))) {
