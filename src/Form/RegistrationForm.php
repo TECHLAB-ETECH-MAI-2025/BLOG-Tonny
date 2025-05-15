@@ -5,6 +5,7 @@ namespace App\Form;
 use App\Entity\User;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
+use Symfony\Component\Form\Extension\Core\Type\EmailType;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -26,7 +27,7 @@ class RegistrationForm extends AbstractType
                     'placeholder' => 'Votre nom'
                 ]
             ])
-            ->add('email', textType::class,[
+            ->add('email', EmailType::class,[
                 'attr' => [
                     'class' => 'form-control',
                     'placeholder' => 'Votre mail'
@@ -34,6 +35,7 @@ class RegistrationForm extends AbstractType
             ])
             ->add('agreeTerms', CheckboxType::class, [
                 'mapped' => false,
+                'label' => 'Accepter les conditions',
                 'constraints' => [
                     new IsTrue([
                         'message' => 'Accepter les termes.',
