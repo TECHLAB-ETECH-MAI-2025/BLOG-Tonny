@@ -16,10 +16,10 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/comment')]
-#[isGranted('ROLE_ADMIN')]
 class CommentController extends AbstractController
 {
     #[Route('/', name: 'app_comment_index', methods: ['GET'])]
+    #[IsGranted('ROLE_ADMIN')]
     public function index(CommentRepository $commentRepository, Request $request): Response
     {
         $page = $request->query->getInt('page', 1);
@@ -55,18 +55,14 @@ class CommentController extends AbstractController
     #[Route('/new-for-article/{id}', name: 'app_comment_new_for_article', methods: ['POST'])]
     public function newForArticle(Request $request, Article $article, EntityManagerInterface $entityManager): Response
     {
-        // Spécifie explicitement que la réponse est du JSON
         $response = new Response();
         $response->headers->set('Content-Type', 'application/json');
 
-        // Créer un nouveau commentaire
         $comment = new Comment();
 
-        // Récupérer les données du formulaire
         $data = $request->request->all();
         $commentData = $data['comment'] ?? [];
 
-        // Vérifier si les données nécessaires sont présentes
         if (empty($commentData['author']) || empty($commentData['content'])) {
             $response->setContent(json_encode([
                 'success' => false,
@@ -76,16 +72,13 @@ class CommentController extends AbstractController
             return $response;
         }
 
-        // Remplir le commentaire avec les données
         $comment->setAuthor($commentData['author']);
         $comment->setContent($commentData['content']);
         $comment->setArticle($article);
 
-        // Persister le commentaire
         $entityManager->persist($comment);
         $entityManager->flush();
 
-        // Retourner une réponse JSON
         $response->setContent(json_encode([
             'success' => true,
             'message' => 'Commentaire ajouté avec succès'
@@ -95,6 +88,7 @@ class CommentController extends AbstractController
     }
 
     #[Route('/{id}', name: 'app_comment_show', methods: ['GET'])]
+    #[IsGranted('ROLE_ADMIN')]
     public function show(Comment $comment): Response
     {
         return $this->render('comment/show.html.twig', [
@@ -103,6 +97,7 @@ class CommentController extends AbstractController
     }
 
     #[Route('/{id}/edit', name: 'app_comment_edit', methods: ['GET', 'POST'])]
+    #[IsGranted('ROLE_ADMIN')]
     public function edit(Request $request, Comment $comment, EntityManagerInterface $entityManager): Response
     {
         $form = $this->createForm(CommentForm::class, $comment);
@@ -121,6 +116,7 @@ class CommentController extends AbstractController
     }
 
     #[Route('/{id}', name: 'app_comment_delete', methods: ['POST'])]
+    #[IsGranted('ROLE_ADMIN')]
     public function delete(Request $request, Comment $comment, EntityManagerInterface $entityManager): Response
     {
         if ($this->isCsrfTokenValid('delete'.$comment->getId(), $request->request->get('_token'))) {

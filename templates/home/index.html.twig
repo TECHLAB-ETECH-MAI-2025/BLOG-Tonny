@@ -85,6 +85,26 @@
             align-items: center;
             width: 100%;
         }
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 1.5rem;
+        }
+        .pagination-btn {
+            padding: 8px 16px;
+            background-color: #f8f9fa;
+            color: #495057;
+            border: 1px solid #dee2e6;
+            text-decoration: none;
+            border-radius: 4px;
+            margin: 0 5px;
+            transition: all 0.2s;
+        }
+        .pagination-btn:hover {
+            background-color: #e9ecef;
+            color: #212529;
+        }
     </style>
 {% endblock %}
 
@@ -124,6 +144,18 @@
                                 </div>
                             </div>
                         {% endfor %}
+                    </div>
+
+                    <div class="pagination-container">
+                        {% if page > 1 %}
+                            <a href="{{ path('app_home', {page: page - 1}) }}" class="pagination-btn">← Précédent</a>
+                        {% endif %}
+
+                        <span class="mx-2">Page {{ page }} sur {{ maxPage }}</span>
+
+                        {% if page < maxPage %}
+                            <a href="{{ path('app_home', {page: page + 1}) }}" class="pagination-btn">Suivant →</a>
+                        {% endif %}
                     </div>
                 {% else %}
                     <div class="no-articles">

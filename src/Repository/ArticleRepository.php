@@ -28,6 +28,19 @@ class ArticleRepository extends ServiceEntityRepository
             false
         );
     }
+    public function paginateArticlesDesc(int $page, int $limit): Paginator
+{
+    $query = $this->createQueryBuilder('a')
+        ->orderBy('a.createdAt', 'DESC')
+        ->getQuery();
+
+    $paginator = new Paginator($query);
+    $paginator->getQuery()
+        ->setFirstResult($limit * ($page - 1))
+        ->setMaxResults($limit);
+
+    return $paginator;
+}
 
     //    /**
     //     * @return Article[] Returns an array of Article objects
