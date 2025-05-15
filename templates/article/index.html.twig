@@ -40,9 +40,9 @@
         .category-badge {
             font-size: 0.75rem;
             color: #fff;
-            padding: 0.3rem 0.6rem;
-            border-radius: 30px;
-            background-color: #6c757d;
+            padding: .3rem .5rem;
+            border-radius: 10px;
+            background-color: rgba(5, 5, 5, 0.7);
             margin-right: 5px;
             margin-bottom: 5px;
             display: inline-block;
@@ -75,7 +75,7 @@
         .btn-create {
             display: inline-block;
             padding: 10px 20px;
-            background-color: #28a745;
+            background-color: #007bff;
             color: white;
             text-decoration: none;
             border-radius: 4px;
@@ -85,7 +85,7 @@
         }
 
         .btn-create:hover {
-            background-color: #218838;
+            background-color: #0655aa;
         }
 
         .pagination-container {
@@ -158,11 +158,11 @@
 
         <div class="pagination-container">
             {% if page > 1 %}
-                <a href="{{ path('app_article_index', {page: page - 1}) }}" class="pagination-btn">← Précédent</a>
+                <a href="{{ path('app_article_index', {page: page - 1}) }}" class="pagination-btn"><i class="bi bi-arrow-left"></i> Précédent</a>
             {% endif %}
 
             {% if page < maxPage %}
-                <a href="{{ path('app_article_index', {page: page + 1}) }}" class="pagination-btn">Suivant →</a>
+                <a href="{{ path('app_article_index', {page: page + 1}) }}" class="pagination-btn">Suivant<i class="bi bi-arrow-right"></i></a>
             {% endif %}
         </div>
     </div>

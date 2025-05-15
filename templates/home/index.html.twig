@@ -18,9 +18,9 @@
         .category-badge {
             font-size: 0.75rem;
             color: #fff;
-            padding: .3rem .6rem;
-            border-radius: 30px;
-            background-color: #6c757d;
+            padding: .3rem .5rem;
+            border-radius: 10px;
+            background-color: rgba(5, 5, 5, 0.7);
             margin-right: 5px;
             display: inline-block;
         }
@@ -148,13 +148,13 @@
 
                     <div class="pagination-container">
                         {% if page > 1 %}
-                            <a href="{{ path('app_home', {page: page - 1}) }}" class="pagination-btn">← Précédent</a>
+                            <a href="{{ path('app_home', {page: page - 1}) }}" class="pagination-btn"><i class="bi bi-arrow-left"></i>  Précédent</a>
                         {% endif %}
 
                         <span class="mx-2">Page {{ page }} sur {{ maxPage }}</span>
 
                         {% if page < maxPage %}
-                            <a href="{{ path('app_home', {page: page + 1}) }}" class="pagination-btn">Suivant →</a>
+                            <a href="{{ path('app_home', {page: page + 1}) }}" class="pagination-btn">Suivant <i class="bi bi-arrow-right"></i> </a>
                         {% endif %}
                     </div>
                 {% else %}
