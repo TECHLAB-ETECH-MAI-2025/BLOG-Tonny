@@ -7,6 +7,7 @@ use App\Repository\ArticleRepository;
 use App\Repository\CategoryRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
@@ -14,13 +15,21 @@ use Symfony\Component\Routing\Attribute\Route;
 final class HomeController extends AbstractController
 {
     #[Route('/', name: 'app_home')]
-    public function index(ArticleRepository $articleRepository, CategoryRepository $categoryRepository): Response
-    {
-        return $this->render('home/index.html.twig', [
-            'articles' => $articleRepository->findBy([], ['createdAt' => 'DESC'], 5),
-            'categories' => $categoryRepository->findAll(),
-        ]);
-    }
+    public function index(ArticleRepository $articleRepository, CategoryRepository $categoryRepository, Request $request): Response
+{
+    $page = $request->query->getInt('page', 1);
+    $limit = 2;
+    $articles = $articleRepository->paginateArticlesDesc($page, $limit);
+    $maxPage = ceil($articles->count() / $limit);
+
+    return $this->render('home/index.html.twig', [
+        'articles' => $articles,
+        'categories' => $categoryRepository->findAll(),
+        'page' => $page,
+        'maxPage' => $maxPage,
+    ]);
+}
+
 
     /*Create once a super Admin*/
     #[Route('/create-my-blog-admin', name: 'create_my_blog_admin_url')]
