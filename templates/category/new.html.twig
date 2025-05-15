@@ -2,9 +2,64 @@
 
 {% block title %}Nouvelle catégorie{% endblock %}
 
-{% block body %}
-    <h1>Nouvelle catégorie</h1>
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .form-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
 
-    {{ include('category/_form.html.twig') }}
-    <a href="#" onclick="window.history.back(); return false;">Retour</a>
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 1rem;
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <div class="form-container">
+        <h1>Nouvelle catégorie</h1>
+
+        {{ include('category/_form.html.twig', {'button_label': 'Créer'}) }}
+
+        <a href="#" class="back-link" onclick="window.history.back(); return false;">Retour</a>
+    </div>
 {% endblock %}

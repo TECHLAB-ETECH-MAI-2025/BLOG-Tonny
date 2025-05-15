@@ -1,34 +1,77 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Comment{% endblock %}
+{% block title %}Commentaire{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .comment-detail {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .detail-row {
+            margin-bottom: 1rem;
+        }
+
+        .detail-label {
+            font-weight: bold;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 1rem;
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+{% endblock %}
 
 {% block body %}
-    <h1>Comment</h1>
+    <div class="comment-detail">
+        <h1>Commentaire</h1>
 
-    <table class="table">
-        <tbody>
-            <tr>
-                <th>Id</th>
-                <td>{{ comment.id }}</td>
-            </tr>
-            <tr>
-                <th>Author</th>
-                <td>{{ comment.author }}</td>
-            </tr>
-            <tr>
-                <th>Content</th>
-                <td>{{ comment.content }}</td>
-            </tr>
-            <tr>
-                <th>CreatedAt</th>
-                <td>{{ comment.createdAt ? comment.createdAt|date('Y-m-d H:i:s') : '' }}</td>
-            </tr>
-        </tbody>
-    </table>
+        <div class="detail-row">
+            <span class="detail-label">Id:</span> {{ comment.id }}
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Auteur:</span> {{ comment.author }}
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Contenu:</span> {{ comment.content }}
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Créé le:</span> {{ comment.createdAt ? comment.createdAt|date('Y-m-d H:i:s') : '' }}
+        </div>
 
-    <a href="{{ path('app_comment_index') }}">back to list</a>
+        <a href="{{ path('app_comment_index') }}" class="back-link">Retour à la liste</a>
 
-    <a href="{{ path('app_comment_edit', {'id': comment.id}) }}">edit</a>
+        <a href="{{ path('app_comment_edit', {'id': comment.id}) }}" class="back-link">Éditer</a>
 
-    {{ include('comment/_delete_form.html.twig') }}
+        {{ include('comment/_delete_form.html.twig') }}
+    </div>
 {% endblock %}

@@ -2,45 +2,168 @@
 
 {% block title %}Article index{% endblock %}
 
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .article-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 2rem;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .article-table th {
+            background-color: #f8f9fa;
+            padding: 16px;
+            font-weight: 600;
+            text-align: left;
+            color: #495057;
+        }
+
+        .article-table td {
+            padding: 16px;
+            border-top: 1px solid #eaeaea;
+            vertical-align: middle;
+        }
+
+        .article-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .article-table tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .category-badge {
+            font-size: 0.75rem;
+            color: #fff;
+            padding: 0.3rem 0.6rem;
+            border-radius: 30px;
+            background-color: #6c757d;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            display: inline-block;
+        }
+
+        .action-link {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .action-link:hover {
+            text-decoration: underline;
+        }
+
+        .content-preview {
+            max-width: 250px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .page-title {
+            margin-bottom: 1.5rem;
+            text-align: center;
+            color: #333;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .btn-create {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            transition: background-color 0.2s;
+            font-weight: 500;
+        }
+
+        .btn-create:hover {
+            background-color: #218838;
+        }
+
+        .pagination-container {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            margin-top: 1.5rem;
+        }
+
+        .pagination-btn {
+            padding: 8px 16px;
+            background-color: #f8f9fa;
+            color: #495057;
+            border: 1px solid #dee2e6;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-left: 5px;
+            transition: all 0.2s;
+        }
+
+        .pagination-btn:hover {
+            background-color: #e9ecef;
+            color: #212529;
+        }
+    </style>
+{% endblock %}
+
 {% block body %}
-    <h1>Article index</h1>
+    <div class="container py-4">
+        <h1 class="page-title">Liste des articles</h1>
 
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Id</th>
-                <th>Titre</th>
-                <th>Contenu</th>
-                <th>Catégorie(s)</th>
-                <th>Publié le</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-        {% for article in articles %}
-            <tr>
-                <td>{{ article.id }}</td>
-                <td>{{ article.title }}</td>
-                <td>{{ article.content }}</td>
-                <td>
-                        <div class="mb-2">
-                            {% for category in article.categories %}
-                                <span class="badge text-bg-primary">{{ category.name }}</span>
-                            {% endfor %}
-                        </div>
-                </td>
-                <td>{{ article.createdAt|date("d/m/Y") }}</td>
-                <td>
-                    <a href="{{ path('app_article_edit', {'id': article.id}) }}">éditer</a>
-                </td>
-            </tr>
-        {% else %}
-            <tr>
-                <td colspan="5">Liste vide</td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+        <a href="{{ path('app_article_new') }}" class="btn-create">Créer un nouvel article</a>
 
-    <a href="{{ path('app_article_new') }}">Créer un nouvel article</a>
+        <table class="article-table">
+            <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>Titre</th>
+                    <th>Contenu</th>
+                    <th>Catégorie(s)</th>
+                    <th>Publié le</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for article in articles %}
+                <tr>
+                    <td>{{ article.id }}</td>
+                    <td>{{ article.title }}</td>
+                    <td>
+                        <div class="content-preview">{{ article.content }}</div>
+                    </td>
+                    <td>
+                        {% for category in article.categories %}
+                            <span class="category-badge">{{ category.name }}</span>
+                        {% endfor %}
+                    </td>
+                    <td>{{ article.createdAt|date("d/m/Y") }}</td>
+                    <td>
+                        <a href="{{ path('app_article_edit', {'id': article.id}) }}" class="action-link">éditer</a>
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="6" style="text-align: center; padding: 20px;">Liste vide</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="pagination-container">
+            {% if page > 1 %}
+                <a href="{{ path('app_article_index', {page: page - 1}) }}" class="pagination-btn">← Précédent</a>
+            {% endif %}
+
+            {% if page < maxPage %}
+                <a href="{{ path('app_article_index', {page: page + 1}) }}" class="pagination-btn">Suivant →</a>
+            {% endif %}
+        </div>
+    </div>
 {% endblock %}

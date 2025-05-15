@@ -1,7 +1,13 @@
 {% block comment_form %}
 {{ form_start(form) }}
-    {{ form_row(form.author, {'attr': {'class': 'form-control mb-2'}}) }}
-    {{ form_row(form.content, {'attr': {'class': 'form-control mb-2', 'rows': 5}}) }}
-    <button class="btn btn-primary mt-2">{{ button_label|default('Ajouter un commentaire') }}</button>
+    <div class="form-group">
+        {{ form_label(form.author) }}
+        {{ form_widget(form.author, {'attr': {'class': 'form-control'}}) }}
+    </div>
+    <div class="form-group">
+        {{ form_label(form.content) }}
+        {{ form_widget(form.content, {'attr': {'class': 'form-control', 'rows': 5}}) }}
+    </div>
+    <button type="submit" class="btn btn-primary mt-2">{{ button_label|default('Ajouter un commentaire') }}</button>
 {{ form_end(form) }}
 {% endblock %}

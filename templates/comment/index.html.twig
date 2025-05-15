@@ -1,39 +1,144 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Comment index{% endblock %}
+{% block title %}Liste des commentaires{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .comment-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 2rem;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .comment-table th {
+            background-color: #f8f9fa;
+            padding: 16px;
+            font-weight: 600;
+            text-align: left;
+            color: #495057;
+        }
+
+        .comment-table td {
+            padding: 16px;
+            border-top: 1px solid #eaeaea;
+            vertical-align: middle;
+        }
+
+        .comment-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .comment-table tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .action-link {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .action-link:hover {
+            text-decoration: underline;
+        }
+
+        .page-title {
+            margin-bottom: 1.5rem;
+            text-align: center;
+            color: #333;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .btn-create {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            transition: background-color 0.2s;
+            font-weight: 500;
+        }
+
+        .btn-create:hover {
+            background-color: #218838;
+        }
+
+        .pagination-container {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            margin-top: 1.5rem;
+        }
+
+        .pagination-btn {
+            padding: 8px 16px;
+            background-color: #f8f9fa;
+            color: #495057;
+            border: 1px solid #dee2e6;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-left: 5px;
+            transition: all 0.2s;
+        }
+
+        .pagination-btn:hover {
+            background-color: #e9ecef;
+            color: #212529;
+        }
+    </style>
+{% endblock %}
 
 {% block body %}
-    <h1>Comment index</h1>
+    <div class="container py-4">
+        <h1 class="page-title">Liste des commentaires</h1>
 
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Id</th>
-                <th>Author</th>
-                <th>Content</th>
-                <th>CreatedAt</th>
-                <th>actions</th>
-            </tr>
-        </thead>
-        <tbody>
-        {% for comment in comments %}
-            <tr>
-                <td>{{ comment.id }}</td>
-                <td>{{ comment.author }}</td>
-                <td>{{ comment.content }}</td>
-                <td>{{ comment.createdAt ? comment.createdAt|date('Y-m-d H:i:s') : '' }}</td>
-                <td>
-                    <a href="{{ path('app_comment_show', {'id': comment.id}) }}">show</a>
-                    <a href="{{ path('app_comment_edit', {'id': comment.id}) }}">edit</a>
-                </td>
-            </tr>
-        {% else %}
-            <tr>
-                <td colspan="5">no records found</td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+        <a href="{{ path('app_comment_new') }}" class="btn-create">Créer un nouveau commentaire</a>
 
-    <a href="{{ path('app_comment_new') }}">Create new</a>
+        <table class="comment-table">
+            <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>Auteur</th>
+                    <th>Contenu</th>
+                    <th>Créé le</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for comment in comments %}
+                <tr>
+                    <td>{{ comment.id }}</td>
+                    <td>{{ comment.author }}</td>
+                    <td>{{ comment.content }}</td>
+                    <td>{{ comment.createdAt ? comment.createdAt|date('Y-m-d H:i:s') : '' }}</td>
+                    <td>
+                        <a href="{{ path('app_comment_show', {'id': comment.id}) }}" class="action-link">Voir</a>
+                        <a href="{{ path('app_comment_edit', {'id': comment.id}) }}" class="action-link">Éditer</a>
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="5">Aucun enregistrement trouvé</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="pagination-container">
+            {% if page > 1 %}
+                <a href="{{ path('app_comment_index', {page: page - 1}) }}" class="pagination-btn">← Précédent</a>
+            {% endif %}
+
+            {% if page < maxPage %}
+                <a href="{{ path('app_comment_index', {page: page + 1}) }}" class="pagination-btn">Suivant →</a>
+            {% endif %}
+        </div>
+    </div>
 {% endblock %}
