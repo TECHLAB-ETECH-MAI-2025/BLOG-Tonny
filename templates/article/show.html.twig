@@ -48,6 +48,9 @@
             color: #333;
             text-decoration: none;
         }
+        .alert {
+            margin-top: 1rem;
+        }
     </style>
 {% endblock %}
 
@@ -77,25 +80,29 @@
             </button>
         </div>
 
-        {% if article.comments|length > 0 %}
-            <div class="comments-list">
-                {% for comment in article.comments %}
-                    <div class="comment-card">
-                        <div class="p-3">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="comment-author">{{ comment.author }}</span>
-                                <span class="comment-date">{{ comment.createdAt|date("d/m/Y") }}</span>
+        <div id="comment-alert" class="alert d-none" role="alert"></div>
+
+        <div id="comments-container">
+            {% if article.comments|length > 0 %}
+                <div class="comments-list">
+                    {% for comment in article.comments %}
+                        <div class="comment-card">
+                            <div class="p-3">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="comment-author">{{ comment.author }}</span>
+                                    <span class="comment-date">{{ comment.createdAt|date("d/m/Y") }}</span>
+                                </div>
+                                <p class="mb-0">{{ comment.content }}</p>
                             </div>
-                            <p class="mb-0">{{ comment.content }}</p>
                         </div>
-                    </div>
-                {% endfor %}
-            </div>
-        {% else %}
-            <div class="no-comments">
-                <p class="mb-0">Aucun commentaire pour cet article.</p>
-            </div>
-        {% endif %}
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="no-comments">
+                    <p class="mb-0">Aucun commentaire pour cet article.</p>
+                </div>
+            {% endif %}
+        </div>
         <div class="d-flex justify-content-between border-top pt-3 mt-3">
             <a href="#" onclick="window.history.back(); return false;" class="back-link">Retour</a>
         </div>
@@ -110,7 +117,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-4">
-                <form action="{{ path('app_comment_new_for_article', {'id': article.id}) }}" method="post" class="comment-form">
+                <form method="post" id="comment-form" class="comment-form">
                     <div class="mb-3">
                         <label for="comment_author" class="form-label">Votre nom</label>
                         <input type="text" id="comment_author" name="comment[author]" class="form-control" required>
@@ -137,43 +144,78 @@
     {{ parent() }}
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const commentForm = document.querySelector('.comment-form');
+            const commentForm = document.getElementById('comment-form');
+            const commentAlert = document.getElementById('comment-alert');
 
             commentForm.addEventListener('submit', function(event) {
                 event.preventDefault();
 
-                fetch(this.action, {
+                const formData = new FormData(this);
+                const actionUrl = "{{ path('app_comment_new_for_article', {'id': article.id}) }}";
+
+                // Show loading indication
+                const submitBtn = this.querySelector('button[type="submit"]');
+                const originalBtnText = submitBtn.textContent;
+                submitBtn.textContent = 'Envoi en cours...';
+                submitBtn.disabled = true;
+
+                fetch(actionUrl, {
                     method: 'POST',
-                    body: new FormData(this),
+                    body: formData,
+                    credentials: 'same-origin'
                 })
                 .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Erreur de réseau ou du serveur');
+                    if (response.url.includes('/login')) {
+                        throw new Error('Vous devez être connecté pour commenter');
                     }
+
                     return response.text().then(text => {
                         try {
                             return JSON.parse(text);
                         } catch (e) {
-                            console.error('Réponse non-JSON:', text);
-                            throw new Error('Format de réponse invalide');
+                            if (text.includes('DOCTYPE html')) {
+                                throw new Error('Session expirée. Veuillez vous reconnecter.');
+                            } else {
+                                console.error('Réponse non-JSON:', text);
+                                throw new Error('Format de réponse invalide');
+                            }
                         }
                     });
                 })
                 .then(data => {
                     if (data.success) {
+                        // Close modal
                         const modalElement = document.getElementById('commentModal');
                         const modal = bootstrap.Modal.getInstance(modalElement);
                         modal.hide();
-                        window.location.reload();
+
+                        commentAlert.textContent = 'Commentaire ajouté avec succès!';
+                        commentAlert.classList.remove('d-none', 'alert-danger');
+                        commentAlert.classList.add('alert-success');
+
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1000);
                     } else {
-                        alert('Erreur lors de l\'ajout du commentaire : ' + data.message);
+                        showError(data.message || 'Erreur lors de l\'ajout du commentaire');
                     }
                 })
                 .catch(error => {
-                    console.error('Erreur :', error);
-                    alert('Une erreur est survenue lors de l\'envoi du commentaire.');
+                    console.error('Erreur:', error);
+                    showError(error.message || 'Une erreur est survenue lors de l\'envoi du commentaire');
+                })
+                .finally(() => {
+                    // Reset button state
+                    submitBtn.textContent = originalBtnText;
+                    submitBtn.disabled = false;
                 });
             });
+
+            function showError(message) {
+                commentAlert.textContent = message;
+                commentAlert.classList.remove('d-none', 'alert-success');
+                commentAlert.classList.add('alert-danger');
+            }
         });
     </script>
 {% endblock %}
