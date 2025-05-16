@@ -20,7 +20,7 @@ final class ArticleController extends AbstractController
     public function index(ArticleRepository $articleRepository, Request $request): Response
     {
         $page = $request->query->getInt('page', 1);
-        $articles = $articleRepository->paginateAticles($page, $limit = 2);
+        $articles = $articleRepository->paginateArticles($page, $limit = 2);
         $maxPage = ceil($articles->count() / $limit);
         return $this->render('article/index.html.twig', [
             'articles' => $articles,

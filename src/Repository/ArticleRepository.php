@@ -18,7 +18,15 @@ class ArticleRepository extends ServiceEntityRepository
         parent::__construct($registry, Article::class);
     }
 
-    public  function paginateAticles(int $page, int $limit): Paginator
+    /**
+     * Pagine les articles en ordre chronologique.
+     * Renvoie un objet Paginator contenant les articles pour la page demandée.
+     *
+     * @param int $page Le numéro de page à afficher
+     * @param int $limit Le nombre d'articles par page
+     * @return Paginator L'objet de pagination avec les résultats
+     */
+    public function paginateArticles(int $page, int $limit): Paginator
     {
         return new Paginator($this->createQueryBuilder('r')
             ->setFirstResult(($page - 1) * $limit)
@@ -28,19 +36,28 @@ class ArticleRepository extends ServiceEntityRepository
             false
         );
     }
+
+    /**
+     * Pagine les articles par ordre décroissant de date de création.
+     * Permet d'afficher les articles les plus récents en premier.
+     *
+     * @param int $page Le numéro de page à afficher
+     * @param int $limit Le nombre d'articles par page
+     * @return Paginator L'objet de pagination avec les résultats
+     */
     public function paginateArticlesDesc(int $page, int $limit): Paginator
-{
-    $query = $this->createQueryBuilder('a')
-        ->orderBy('a.createdAt', 'DESC')
-        ->getQuery();
+    {
+        $query = $this->createQueryBuilder('a')
+            ->orderBy('a.createdAt', 'DESC')
+            ->getQuery();
 
-    $paginator = new Paginator($query);
-    $paginator->getQuery()
-        ->setFirstResult($limit * ($page - 1))
-        ->setMaxResults($limit);
+        $paginator = new Paginator($query);
+        $paginator->getQuery()
+            ->setFirstResult($limit * ($page - 1))
+            ->setMaxResults($limit);
 
-    return $paginator;
-}
+        return $paginator;
+    }
 
     //    /**
     //     * @return Article[] Returns an array of Article objects
