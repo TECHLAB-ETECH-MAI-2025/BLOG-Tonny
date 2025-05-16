@@ -1,14 +1,26 @@
-# Blog 
+Blog
+Création d'un Utilisateur Administrateur
 
-## Création d'un Utilisateur Administrateur
+bash
 
-Pour créer un utilisateur administrateur, vous pouvez accéder à l'URL suivante dans votre navigateur :
+http://localhost:8000/create-my-blog-admin
+
 Cette URL va créer un utilisateur administrateur avec les informations suivantes :
 
-   ```bash
-  http://localhost:8000/create-my-blog-admin
-   ```
-- **Email** : `admin@admin.test`
-- **Nom d'utilisateur** : `admin`
-- **Mot de passe** : `0000`
-- **Rôle** : `ROLE_ADMIN`
+    Email : admin@admin.test
+    Nom d'utilisateur : admin
+    Mot de passe : 0000
+    
+
+Création de Données de Test
+
+bash
+
+http://localhost:8000/create-test-data
+
+Utilisateur standard
+
+    Email : user@blog.test
+    Nom d'utilisateur : testuser
+    Mot de passe : 1234
+    
