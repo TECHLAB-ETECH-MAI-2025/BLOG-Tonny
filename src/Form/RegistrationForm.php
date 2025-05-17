@@ -59,8 +59,6 @@ class RegistrationForm extends AbstractType
                         'max' => 4096,
                     ]),
                 ],
-            ])->add('save', SubmitType::class, [
-                'label' => 'S\'inscrire',
             ])
         ;
     }

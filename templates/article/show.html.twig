@@ -41,6 +41,17 @@
         .back-button:hover {
             transform: translateX(-3px);
         }
+        .comment-card {
+            opacity: 1;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        .comment-card.new-comment {
+            animation: highlightComment 2s ease;
+        }
+        @keyframes highlightComment {
+            0% { background-color: #e3f2fd; }
+            100% { background-color: #f9fafb; }
+        }
     </style>
 {% endblock %}
 
@@ -86,7 +97,7 @@
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 comments-toggle text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                 </svg>
-                <h2 class="text-lg font-semibold text-gray-800">Commentaires <span class="text-gray-500 text-base">({{ article.comments|length }})</span></h2>
+                <h2 class="text-lg font-semibold text-gray-800">Commentaires <span class="text-gray-500 text-base" id="comments-count">({{ article.comments|length }})</span></h2>
             </div>
             <button type="button" class="px-4 py-2 text-sm font-medium bg-blue-500 hover:bg-blue-600 text-white rounded-md transition-colors shadow-sm" data-bs-toggle="modal" data-bs-target="#commentModal">
                 Commenter
@@ -96,8 +107,8 @@
         <div id="comment-alert" class="hidden p-3 mb-3 text-sm rounded" role="alert"></div>
 
         <div id="comments-container" class="comments-container-visible">
-            {% if article.comments|length > 0 %}
-                <div class="comments-list space-y-2">
+            <div class="comments-list space-y-2" id="comments-list">
+                {% if article.comments|length > 0 %}
                     {% for comment in article.comments %}
                         <div class="comment-card bg-gray-50 border-l-4 border-l-blue-500 pl-4 py-3 rounded-r">
                             <div>
@@ -106,12 +117,12 @@
                             </div>
                         </div>
                     {% endfor %}
-                </div>
-            {% else %}
-                <div class="no-comments text-center text-gray-500 py-6 bg-gray-50 rounded">
-                    <p class="mb-0">Aucun commentaire pour cet article.</p>
-                </div>
-            {% endif %}
+                {% else %}
+                    <div class="no-comments text-center text-gray-500 py-6 bg-gray-50 rounded" id="no-comments-message">
+                        <p class="mb-0">Aucun commentaire pour cet article.</p>
+                    </div>
+                {% endif %}
+            </div>
         </div>
     </section>
 </div>
@@ -156,8 +167,12 @@
             const toggleComments = document.getElementById('toggle-comments');
             const commentsContainer = document.getElementById('comments-container');
             const commentsToggleIcon = document.querySelector('.comments-toggle');
+            const commentsList = document.getElementById('comments-list');
+            const commentsCount = document.getElementById('comments-count');
+            const noCommentsMessage = document.getElementById('no-comments-message');
 
-            // Toggle comments visibility
+            let currentCommentsCount = {{ article.comments|length }};
+
             toggleComments.addEventListener('click', function() {
                 if (commentsContainer.classList.contains('comments-container-visible')) {
                     commentsContainer.classList.remove('comments-container-visible');
@@ -175,6 +190,10 @@
 
                 const formData = new FormData(this);
                 const actionUrl = "{{ path('app_comment_new_for_article', {'id': article.id}) }}";
+
+                // Get form values for later use
+                const author = document.getElementById('comment_author').value;
+                const content = document.getElementById('comment_content').value;
 
                 // Show loading indication
                 const submitBtn = this.querySelector('button[type="submit"]');
@@ -212,9 +231,13 @@
                         const modal = bootstrap.Modal.getInstance(modalElement);
                         modal.hide();
 
+                        // Show success message
                         commentAlert.textContent = 'Commentaire ajouté avec succès!';
                         commentAlert.classList.remove('hidden', 'bg-red-100', 'text-red-700');
                         commentAlert.classList.add('bg-green-100', 'text-green-700');
+
+                        // Clear form fields
+                        commentForm.reset();
 
                         // Ensure comments are visible
                         if (commentsContainer.classList.contains('comments-container-hidden')) {
@@ -223,9 +246,13 @@
                             commentsToggleIcon.classList.remove('collapsed');
                         }
 
+                        // Add the new comment to the DOM
+                        addNewComment(author, content);
+
+                        // Auto-hide the alert after 3 seconds
                         setTimeout(() => {
-                            window.location.reload();
-                        }, 1000);
+                            commentAlert.classList.add('hidden');
+                        }, 3000);
                     } else {
                         showError(data.message || 'Erreur lors de l\'ajout du commentaire');
                     }
@@ -241,10 +268,41 @@
                 });
             });
 
+            function addNewComment(author, content) {
+                // Remove "no comments" message if it exists
+                if (noCommentsMessage && commentsList.contains(noCommentsMessage)) {
+                    noCommentsMessage.remove();
+                }
+
+                // Create new comment element
+                const newComment = document.createElement('div');
+                newComment.className = 'comment-card bg-gray-50 border-l-4 border-l-blue-500 pl-4 py-3 rounded-r new-comment';
+                newComment.innerHTML = `
+                    <div>
+                        <span class="font-semibold text-gray-800">${author}</span>
+                        <span class="text-gray-700">: ${content}</span>
+                    </div>
+                `;
+
+                // Add to the comments list
+                commentsList.prepend(newComment);
+
+                currentCommentsCount++;
+                commentsCount.textContent = `(${currentCommentsCount})`;
+
+                // Scroll to the new comment
+                newComment.scrollIntoView({behavior: 'smooth'});
+            }
+
             function showError(message) {
                 commentAlert.textContent = message;
                 commentAlert.classList.remove('hidden', 'bg-green-100', 'text-green-700');
                 commentAlert.classList.add('bg-red-100', 'text-red-700');
+
+                // Auto-hide the alert after 5 seconds
+                setTimeout(() => {
+                    commentAlert.classList.add('hidden');
+                }, 5000);
             }
         });
     </script>

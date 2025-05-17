@@ -1,12 +1,62 @@
 {% extends 'base.html.twig' %}
-
 {% block title %}S'enregistrer{% endblock %}
 
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f5f7fa;
+        }
+        .form-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+    </style>
+{% endblock %}
+
 {% block body %}
-    <h1>S'enregistrer</h1>
+<div class="container mx-auto py-8 px-4">
+    <div class="max-w-md mx-auto form-container p-6">
+        <h1 class="text-2xl font-bold text-gray-800 mb-6 text-center">S'enregistrer</h1>
 
-    {{ form_errors(registrationForm) }}
+        {% if registrationForm.vars.errors|length > 0 %}
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+                {{ form_errors(registrationForm) }}
+            </div>
+        {% endif %}
 
-    {{ form(registrationForm) }}
+        {{ form_start(registrationForm, {'attr': {'class': 'space-y-4'}}) }}
+            <div>
+                {{ form_label(registrationForm.email, 'Email', {'label_attr': {'class': 'form-label'}}) }}
+                {{ form_widget(registrationForm.email, {'attr': {'class': 'form-control'}}) }}
+                {{ form_errors(registrationForm.email, {'attr': {'class': 'form-error'}}) }}
+            </div>
 
+            <div>
+                {{ form_label(registrationForm.username, 'Nom d\'utilisateur', {'label_attr': {'class': 'form-label'}}) }}
+                {{ form_widget(registrationForm.username, {'attr': {'class': 'form-control'}}) }}
+                {{ form_errors(registrationForm.username, {'attr': {'class': 'form-error'}}) }}
+            </div>
+
+            <div>
+                {{ form_label(registrationForm.plainPassword, 'Mot de passe', {'label_attr': {'class': 'form-label'}}) }}
+                {{ form_widget(registrationForm.plainPassword, {'attr': {'class': 'form-control'}}) }}
+                {{ form_errors(registrationForm.plainPassword, {'attr': {'class': 'form-error'}}) }}
+            </div>
+            {{ form_errors(registrationForm.agreeTerms, {'attr': {'class': 'form-error ml-6'}}) }}
+
+            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center pt-2 space-y-3 sm:space-y-0">
+                <button class="w-full sm:w-auto bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-md transition-colors shadow-sm" type="submit">
+                    S'enregistrer
+                </button>
+                <a href="{{ path('app_login')}}" class="w-full sm:w-auto text-center text-blue-600 hover:text-blue-800 font-medium py-2 px-4 rounded-md transition-colors border border-blue-600 hover:border-blue-800">
+                    Déjà inscrit ?
+                </a>
+            </div>
+        {{ form_end(registrationForm) }}
+    </div>
+</div>
 {% endblock %}
