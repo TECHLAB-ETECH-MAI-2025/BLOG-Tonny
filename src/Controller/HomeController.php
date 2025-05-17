@@ -16,11 +16,15 @@ use Symfony\Component\Routing\Attribute\Route;
 
 final class HomeController extends AbstractController
 {
+    /*
+     * Redirect to the main page with the latest articles
+     *
+     */
     #[Route('/', name: 'app_home')]
     public function index(ArticleRepository $articleRepository, CategoryRepository $categoryRepository, Request $request): Response
     {
         $page = $request->query->getInt('page', 1);
-        $limit = 2;
+        $limit = 5;
         $articles = $articleRepository->paginateArticlesDesc($page, $limit);
         $maxPage = ceil($articles->count() / $limit);
 
@@ -32,7 +36,13 @@ final class HomeController extends AbstractController
         ]);
     }
 
-    /*Create once a super Admin*/
+    /**
+     * Crée une fois un super administrateur pour le blog.
+     *
+     * @param EntityManagerInterface $em
+     * @param UserPasswordHasherInterface $hasher
+     * @return Response
+     */
     #[Route('/create-my-blog-admin', name: 'create_my_blog_admin_url')]
     public function createAdmin(EntityManagerInterface $em, UserPasswordHasherInterface $hasher): Response
     {
@@ -54,7 +64,13 @@ final class HomeController extends AbstractController
         return new Response('Administrateur créé avec succès!');
     }
 
-    /*Create test data: categories, articles and a test user*/
+    /**
+     * Crée des données de test : utilisateur, catégories, articles.
+     *
+     * @param EntityManagerInterface $em
+     * @param UserPasswordHasherInterface $hasher
+     * @return Response
+     */
     #[Route('/create-test-data', name: 'create_test_data')]
     public function createTestData(EntityManagerInterface $em, UserPasswordHasherInterface $hasher): Response
     {

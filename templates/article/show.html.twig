@@ -5,131 +5,138 @@
 {% block stylesheets %}
     {{ parent() }}
     <style>
-        .article-header {
-            border-bottom: 1px solid #eaeaea;
-            margin-bottom: 2rem;
-            padding-bottom: 1rem;
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f5f7fa;
         }
-        .category-badge {
-            font-size: 0.8rem;
-            margin-right: 0.5rem;
-            color: #666;
+        .article-container {
+            background-color: white;
+            border-radius: 8px;
         }
-        .article-content {
-            line-height: 1.6;
+        .comments-section {
+            background-color: white;
+            border-radius: 8px;
         }
-        .comment-card {
-            border: 1px solid #eaeaea;
-            border-radius: 0;
-            margin-bottom: 1rem;
+        .comments-toggle {
+            transition: transform 0.3s ease;
         }
-        .comment-author {
-            font-weight: 500;
+        .comments-toggle.collapsed {
+            transform: rotate(-90deg);
         }
-        .comment-date {
-            color: #666;
-            font-size: 0.85rem;
+        .comments-container-hidden {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
         }
-        .comment-count {
-            color: #666;
-            font-size: 0.9rem;
+        .comments-container-visible {
+            max-height: 2000px;
+            transition: max-height 0.3s ease;
         }
-        .no-comments {
-            text-align: center;
-            color: #666;
-            border: 1px solid #eaeaea;
-            padding: 1rem;
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            transition: transform 0.2s ease;
         }
-        .modal-content {
-            border-radius: 0;
-            border: 1px solid #eaeaea;
-        }
-        .back-link {
-            color: #333;
-            text-decoration: none;
-        }
-        .alert {
-            margin-top: 1rem;
+        .back-button:hover {
+            transform: translateX(-3px);
         }
     </style>
 {% endblock %}
 
 {% block body %}
-<article class="container py-4">
-    <header class="article-header">
-        <h1 class="mb-2">{{ article.title }}</h1>
-        <div class="mb-2">
-            <span class="comment-date">Publié le {{ article.createdAt|date("d/m/Y") }}</span>
-        </div>
-        <div class="mb-2">
-            {% for category in article.categories %}
-                <span class="category-badge">{{ category.name }}</span>
-            {% endfor %}
-        </div>
-    </header>
+<div class="container mx-auto py-6 px-4 max-w-4xl">
+    <a href="#" onclick="window.history.back(); return false;" class="back-button text-gray-600 hover:text-blue-500 mb-4 inline-flex items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+        <span class="text-sm">Retour</span>
+    </a>
 
-    <div class="article-content mb-4">
-        {{ article.content|raw }}
-    </div>
+    <article class="article-container p-6 mb-6">
+        <header class="article-header border-b border-gray-200 ">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">{{ article.title }}</h1>
+            <div class="flex justify-between items-center">
+                    <div class="mb-4">
+                                {% set colors = [
+                                    'bg-purple-100 text-purple-800',
+                                    'bg-pink-100 text-pink-800',
+                                    'bg-yellow-100 text-yellow-800',
+                                    'bg-blue-100 text-blue-800',
+                                    'bg-indigo-100 text-indigo-800'
+                                ] %}
+                                {% for category in article.categories %}
+                                    <span class="inline-block {{ colors[loop.index0 % colors|length] }} text-xs px-3 py-1 rounded-lg ">
+                                        {{ category.name }}
+                                    </span>
+                                {% endfor %}
+                    </div>
+                <span class="text-gray-500 text-sm">Publié le {{ article.createdAt|date("d/m/Y") }}</span>
+            </div>
+        </header>
 
-    <section class="comments my-4">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h2 class="h6">Commentaires <span class="comment-count">({{ article.comments|length }})</span></h2>
-            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#commentModal">
-                Ajouter un commentaire
+        <div class="article-content text-gray-600 leading-relaxed">
+            {{ article.content|raw }}
+        </div>
+    </article>
+
+    <section class="comments-section p-6">
+        <div class="flex justify-between items-center ">
+            <div class="flex items-center cursor-pointer" id="toggle-comments">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 comments-toggle text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+                <h2 class="text-lg font-semibold text-gray-800">Commentaires <span class="text-gray-500 text-base">({{ article.comments|length }})</span></h2>
+            </div>
+            <button type="button" class="px-4 py-2 text-sm font-medium bg-blue-500 hover:bg-blue-600 text-white rounded-md transition-colors shadow-sm" data-bs-toggle="modal" data-bs-target="#commentModal">
+                Commenter
             </button>
         </div>
 
-        <div id="comment-alert" class="alert d-none" role="alert"></div>
+        <div id="comment-alert" class="hidden p-3 mb-3 text-sm rounded" role="alert"></div>
 
-        <div id="comments-container">
+        <div id="comments-container" class="comments-container-visible">
             {% if article.comments|length > 0 %}
-                <div class="comments-list">
+                <div class="comments-list space-y-2">
                     {% for comment in article.comments %}
-                        <div class="comment-card">
-                            <div class="p-3">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <span class="comment-author">{{ comment.author }}</span>
-                                    <span class="comment-date">{{ comment.createdAt|date("d/m/Y") }}</span>
-                                </div>
-                                <p class="mb-0">{{ comment.content }}</p>
+                        <div class="comment-card bg-gray-50 border-l-4 border-l-blue-500 pl-4 py-3 rounded-r">
+                            <div>
+                                <span class="font-semibold text-gray-800">{{ comment.author }}</span>
+                                <span class="text-gray-700">: {{ comment.content }}</span>
                             </div>
                         </div>
                     {% endfor %}
                 </div>
             {% else %}
-                <div class="no-comments">
+                <div class="no-comments text-center text-gray-500 py-6 bg-gray-50 rounded">
                     <p class="mb-0">Aucun commentaire pour cet article.</p>
                 </div>
             {% endif %}
         </div>
-        <div class="d-flex justify-content-between border-top pt-3 mt-3">
-            <a href="#" onclick="window.history.back(); return false;" class="back-link">Retour</a>
-        </div>
     </section>
-</article>
+</div>
 
 <div class="modal fade" id="commentModal" tabindex="-1" aria-labelledby="commentModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header border-bottom-0">
-                <h5 class="modal-title" id="commentModalLabel">Ajouter un commentaire</h5>
+        <div class="modal-content bg-white rounded shadow border-0">
+            <div class="modal-header border-b border-gray-100 p-4">
+                <h5 class="modal-title text-lg font-semibold text-gray-800" id="commentModalLabel">Ajouter un commentaire</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-4">
                 <form method="post" id="comment-form" class="comment-form">
-                    <div class="mb-3">
-                        <label for="comment_author" class="form-label">Votre nom</label>
-                        <input type="text" id="comment_author" name="comment[author]" class="form-control" required>
+                    <div class="mb-4">
+                        <label for="comment_author" class="block text-sm font-medium text-gray-700 mb-1">Votre nom</label>
+                        <input type="text" id="comment_author" name="comment[author]" class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500" required>
                     </div>
-                    <div class="mb-3">
-                        <label for="comment_content" class="form-label">Votre commentaire</label>
-                        <textarea id="comment_content" name="comment[content]" class="form-control" rows="3" required></textarea>
+                    <div class="mb-4">
+                        <label for="comment_content" class="block text-sm font-medium text-gray-700 mb-1">Votre commentaire</label>
+                        <textarea id="comment_content" name="comment[content]" class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500" rows="3" required></textarea>
                     </div>
                     <input type="hidden" name="article_id" value="{{ article.id }}">
-                    <div class="text-end">
-                        <button type="button" class="btn btn-sm btn-outline-secondary me-2" data-bs-dismiss="modal">Annuler</button>
-                        <button type="submit" class="btn btn-sm btn-secondary">
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors text-sm font-medium" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-sm font-medium shadow-sm">
                             Publier
                         </button>
                     </div>
@@ -146,6 +153,22 @@
         document.addEventListener('DOMContentLoaded', function() {
             const commentForm = document.getElementById('comment-form');
             const commentAlert = document.getElementById('comment-alert');
+            const toggleComments = document.getElementById('toggle-comments');
+            const commentsContainer = document.getElementById('comments-container');
+            const commentsToggleIcon = document.querySelector('.comments-toggle');
+
+            // Toggle comments visibility
+            toggleComments.addEventListener('click', function() {
+                if (commentsContainer.classList.contains('comments-container-visible')) {
+                    commentsContainer.classList.remove('comments-container-visible');
+                    commentsContainer.classList.add('comments-container-hidden');
+                    commentsToggleIcon.classList.add('collapsed');
+                } else {
+                    commentsContainer.classList.remove('comments-container-hidden');
+                    commentsContainer.classList.add('comments-container-visible');
+                    commentsToggleIcon.classList.remove('collapsed');
+                }
+            });
 
             commentForm.addEventListener('submit', function(event) {
                 event.preventDefault();
@@ -155,8 +178,8 @@
 
                 // Show loading indication
                 const submitBtn = this.querySelector('button[type="submit"]');
-                const originalBtnText = submitBtn.textContent;
-                submitBtn.textContent = 'Envoi en cours...';
+                const originalBtnText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<span class="inline-block animate-spin mr-1">⟳</span> Envoi...';
                 submitBtn.disabled = true;
 
                 fetch(actionUrl, {
@@ -190,8 +213,15 @@
                         modal.hide();
 
                         commentAlert.textContent = 'Commentaire ajouté avec succès!';
-                        commentAlert.classList.remove('d-none', 'alert-danger');
-                        commentAlert.classList.add('alert-success');
+                        commentAlert.classList.remove('hidden', 'bg-red-100', 'text-red-700');
+                        commentAlert.classList.add('bg-green-100', 'text-green-700');
+
+                        // Ensure comments are visible
+                        if (commentsContainer.classList.contains('comments-container-hidden')) {
+                            commentsContainer.classList.remove('comments-container-hidden');
+                            commentsContainer.classList.add('comments-container-visible');
+                            commentsToggleIcon.classList.remove('collapsed');
+                        }
 
                         setTimeout(() => {
                             window.location.reload();
@@ -206,15 +236,15 @@
                 })
                 .finally(() => {
                     // Reset button state
-                    submitBtn.textContent = originalBtnText;
+                    submitBtn.innerHTML = originalBtnText;
                     submitBtn.disabled = false;
                 });
             });
 
             function showError(message) {
                 commentAlert.textContent = message;
-                commentAlert.classList.remove('d-none', 'alert-success');
-                commentAlert.classList.add('alert-danger');
+                commentAlert.classList.remove('hidden', 'bg-green-100', 'text-green-700');
+                commentAlert.classList.add('bg-red-100', 'text-red-700');
             }
         });
     </script>

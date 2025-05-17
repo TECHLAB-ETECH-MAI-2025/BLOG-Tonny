@@ -5,196 +5,99 @@
 {% block stylesheets %}
     {{ parent() }}
     <style>
-        .blog-card {
-            border: 1px solid #eaeaea;
-            border-radius: 8px;
-            background-color: #fff;
-            max-width: 800px;
-            margin: 0 auto;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .category-badge {
-            font-size: 0.75rem;
-            color: #fff;
-            padding: .3rem .5rem;
-            border-radius: 10px;
-            background-color: rgba(5, 5, 5, 0.7);
-            margin-right: 5px;
-            display: inline-block;
-        }
-        .blog-header {
-            border-bottom: 2px solid #f8f9fa;
-            margin-bottom: 2rem;
-            padding-bottom: 1rem;
-            text-align: center;
-        }
-        .read-more-link {
-            color: #007bff;
-            font-weight: 500;
-            text-decoration: none;
-            display: inline-block;
-            margin-top: 5px;
-        }
-        .read-more-link:hover {
-            text-decoration: underline;
-        }
-        .category-sidebar {
-            border: 1px solid #eaeaea;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-        .category-header {
-            padding: 1rem;
-            border-bottom: 1px solid #eaeaea;
-            background-color: #f8f9fa;
-        }
-        .category-link {
-            color: #495057;
-            text-decoration: none;
-            transition: color 0.2s ease;
-        }
-        .category-link:hover {
-            color: #007bff;
-        }
-        .article-date {
-            color: #6c757d;
-            font-size: 0.8rem;
-            font-style: italic;
-            display: block;
-            margin-bottom: 10px;
-            text-align: right;
-        }
-        .article-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-            margin-bottom: 10px;
-        }
-        .no-articles {
-            padding: 2rem;
-            text-align: center;
-            color: #666;
-            border: 1px solid #eaeaea;
-            border-radius: 8px;
-        }
-        .articles-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-        }
-        .pagination-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-top: 1.5rem;
-        }
-        .pagination-btn {
-            padding: 8px 16px;
-            background-color: #f8f9fa;
-            color: #495057;
-            border: 1px solid #dee2e6;
-            text-decoration: none;
-            border-radius: 4px;
-            margin: 0 5px;
-            transition: all 0.2s;
-        }
-        .pagination-btn:hover {
-            background-color: #e9ecef;
-            color: #212529;
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
         }
     </style>
 {% endblock %}
 
 {% block body %}
-    <div class="container py-4">
-        <div class="blog-header">
-            <h1>Derniers articles</h1>
+    <div class="container mx-auto py-8">
+        <div class="blog-header text-center border-b-2 border-gray-200 mb-12 pb-4">
+            <h1 class="text-3xl font-bold text-gray-800">Derniers articles</h1>
         </div>
 
-        <div class="row g-4 justify-content-center">
-            <div class="col-lg-8">
-                {% if articles|length > 0 %}
-                    <div class="articles-container">
-                        {% for article in articles %}
-                            <div class="card blog-card w-100 mb-4">
-                                <div class="card-body p-4">
-                                    <div class="article-header">
-                                        <h2 class="card-title h5 mb-0">{{ article.title }}</h2>
-                                        <span class="article-date">
-                                            {{ article.createdAt|date("d/m/Y") }}
-                                        </span>
-                                    </div>
-
-                                    <div class="mb-3">
-                                        {% for category in article.categories %}
-                                            <span class="category-badge">{{ category.name }}</span>
-                                        {% endfor %}
-                                    </div>
-
-                                    <p class="card-text mb-3">
-                                        {{ article.content|length > 150 ? article.content|slice(0, 150) ~ '...' : article.content }}
-                                    </p>
-
-                                    <a href="{{ path('app_article_show', {'id': article.id}) }}" class="read-more-link">
-                                        Lire plus →
-                                    </a>
-                                </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% if articles|length > 0 %}
+                {% for article in articles %}
+                    <div class="bg-white rounded-xl shadow-sm hover:shadow-lg transition-shadow duration-300 ease-in-out overflow-hidden">
+                        <div class="p-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <h2 class="text-xl font-semibold text-gray-800">{{ article.title }}</h2>
+                                <span class="text-sm text-gray-500">
+                                    {{ article.createdAt|date("d-m-Y") }}
+                                </span>
                             </div>
-                        {% endfor %}
-                    </div>
 
-                    <div class="pagination-container">
-                        {% if page > 1 %}
-                            <a href="{{ path('app_home', {page: page - 1}) }}" class="pagination-btn"><i class="bi bi-arrow-left"></i>  Précédent</a>
-                        {% endif %}
-
-                        <span class="mx-2">Page {{ page }} sur {{ maxPage }}</span>
-
-                        {% if page < maxPage %}
-                            <a href="{{ path('app_home', {page: page + 1}) }}" class="pagination-btn">Suivant <i class="bi bi-arrow-right"></i> </a>
-                        {% endif %}
-                    </div>
-                {% else %}
-                    <div class="no-articles">
-                        <p>Aucun article disponible.</p>
-                    </div>
-                {% endif %}
-            </div>
-
-            {% if is_granted('ROLE_ADMIN') %}
-            <div class="col-lg-4">
-                <div class="category-sidebar">
-                    <div class="category-header">
-                        <h3 class="h6 mb-0">Catégories</h3>
-                    </div>
-
-                    {% if categories|length > 0 %}
-                        <ul class="list-group list-group-flush">
-                            {% for category in categories %}
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    <a href="{{ path('app_category_show', {'id': category.id}) }}" class="category-link">
+                            <div class="mb-4">
+                                {% set colors = [
+                                    'bg-purple-100 text-purple-800',
+                                    'bg-pink-100 text-pink-800',
+                                    'bg-yellow-100 text-yellow-800',
+                                    'bg-blue-100 text-blue-800',
+                                    'bg-indigo-100 text-indigo-800'
+                                ] %}
+                                {% for category in article.categories %}
+                                    <span class="inline-block {{ colors[loop.index0 % colors|length] }} text-xs px-3 py-1 rounded-lg mr-2">
                                         {{ category.name }}
-                                    </a>
-                                    <span class="badge bg-light text-dark">{{ category.articles|length }}</span>
-                                </li>
-                            {% endfor %}
-                        </ul>
-                    {% else %}
-                        <div class="p-3 text-center text-muted">
-                            Aucune catégorie disponible.
+                                    </span>
+                                {% endfor %}
+                            </div>
+
+                            <p class="text-gray-600 mb-6">
+                                {{ article.content|length > 150 ? article.content|slice(0, 150) ~ '...' : article.content }}
+                            </p>
+
+                            <a href="{{ path('app_article_show', {'id': article.id}) }}" class="text-blue-500 font-medium hover:underline inline-block">
+                                Lire plus →
+                            </a>
                         </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="col-span-full p-8 text-center text-gray-500 border border-gray-200 rounded-lg">
+                    <p>Aucun article disponible.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="pagination-container flex justify-center items-center mt-12">
+            {% if page > 1 %}
+                <a href="{{ path('app_home', {page: page - 1}) }}" class="px-4 py-2 bg-gray-200 text-gray-700 border border-gray-300 rounded hover:bg-gray-300 hover:text-gray-800 transition-all duration-200"><i class="bi bi-chevron-left"></i></a>
+            {% endif %}
+
+            {# Ajout de la pagination numérotée #}
+            {% set pageRange = 2 %}
+
+            {% if maxPage > 1 %}
+                {% if page > pageRange + 1 %}
+                    <a href="{{ path('app_home', {page: 1}) }}" class="px-3 py-2 bg-gray-200 text-gray-700 border border-gray-300 rounded hover:bg-gray-300 hover:text-gray-800 transition-all duration-200 mx-1 min-w-10 text-center">1</a>
+
+                    {% if page > pageRange + 2 %}
+                        <span class="px-3 py-2 text-gray-500 mx-1">...</span>
+                    {% endif %}
+                {% endif %}
+
+                {% for i in max(1, page - pageRange)..min(maxPage, page + pageRange) %}
+                    {% if i == page %}
+                        <span class="px-3 py-2 bg-gray-600 text-white border border-gray-500 rounded mx-1 min-w-10 text-center">{{ i }}</span>
+                    {% else %}
+                        <a href="{{ path('app_home', {page: i}) }}" class="px-3 py-2 bg-gray-200 text-gray-700 border border-gray-300 rounded hover:bg-gray-300 hover:text-gray-800 transition-all duration-200 mx-1 min-w-10 text-center">{{ i }}</a>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page < maxPage - pageRange %}
+                    {% if page < maxPage - pageRange - 1 %}
+                        <span class="px-3 py-2 text-gray-500 mx-1">...</span>
                     {% endif %}
 
-                    <div class="p-3 border-top">
-                        <a href="{{ path('app_category_new') }}" class="btn btn-outline-secondary btn-sm w-100">
-                            Nouvelle catégorie
-                        </a>
-                    </div>
-                </div>
-            </div>
+                    <a href="{{ path('app_home', {page: maxPage}) }}" class="px-3 py-2 bg-gray-200 text-gray-700 border border-gray-300 rounded hover:bg-gray-300 hover:text-gray-800 transition-all duration-200 mx-1 min-w-10 text-center">{{ maxPage }}</a>
+                {% endif %}
+            {% endif %}
+
+            {% if page < maxPage %}
+                <a href="{{ path('app_home', {page: page + 1}) }}" class="px-4 py-2 bg-gray-200 text-gray-700 border border-gray-300 rounded hover:bg-gray-300 hover:text-gray-800 transition-all duration-200"><i class="bi bi-chevron-right"></i></a>
             {% endif %}
         </div>
     </div>
