@@ -1,169 +1,54 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Article index{% endblock %}
-
-{% block stylesheets %}
-    {{ parent() }}
-    <style>
-        .article-table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-            border-radius: 8px;
-            overflow: hidden;
-            margin-bottom: 2rem;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        .article-table th {
-            background-color: #f8f9fa;
-            padding: 16px;
-            font-weight: 600;
-            text-align: left;
-            color: #495057;
-        }
-
-        .article-table td {
-            padding: 16px;
-            border-top: 1px solid #eaeaea;
-            vertical-align: middle;
-        }
-
-        .article-table tr:last-child td {
-            border-bottom: none;
-        }
-
-        .article-table tr:hover {
-            background-color: #f8f9fa;
-        }
-
-        .category-badge {
-            font-size: 0.75rem;
-            color: #fff;
-            padding: .3rem .5rem;
-            border-radius: 10px;
-            background-color: rgba(5, 5, 5, 0.7);
-            margin-right: 5px;
-            margin-bottom: 5px;
-            display: inline-block;
-        }
-
-        .action-link {
-            color: #007bff;
-            text-decoration: none;
-            font-weight: 500;
-        }
-
-        .action-link:hover {
-            text-decoration: underline;
-        }
-
-        .content-preview {
-            max-width: 250px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .page-title {
-            margin-bottom: 1.5rem;
-            text-align: center;
-            color: #333;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        .btn-create {
-            display: inline-block;
-            padding: 10px 20px;
-            background-color: #007bff;
-            color: white;
-            text-decoration: none;
-            border-radius: 4px;
-            margin-bottom: 1rem;
-            transition: background-color 0.2s;
-            font-weight: 500;
-        }
-
-        .btn-create:hover {
-            background-color: #0655aa;
-        }
-
-        .pagination-container {
-            display: flex;
-            justify-content: flex-end;
-            align-items: center;
-            margin-top: 1.5rem;
-        }
-
-        .pagination-btn {
-            padding: 8px 16px;
-            background-color: #f8f9fa;
-            color: #495057;
-            border: 1px solid #dee2e6;
-            text-decoration: none;
-            border-radius: 4px;
-            margin-left: 5px;
-            transition: all 0.2s;
-        }
-
-        .pagination-btn:hover {
-            background-color: #e9ecef;
-            color: #212529;
-        }
-    </style>
-{% endblock %}
+{% block title %}Liste des Articles{% endblock %}
 
 {% block body %}
-    <div class="container py-4">
-        <h1 class="page-title">Liste des articles</h1>
+    <div class="container mx-auto py-8 px-4 w-screen">
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-3xl font-bold mb-2 text-gray-800">Liste des Articles</h1>
+                <p class="text-gray-600">Gérez vos articles et filtrez par catégorie</p>
+            </div>
+            <div>
+                <a href="{{ path('app_article_new') }}" class="bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-md transition duration-200 flex items-center">
+                    <i class="fas fa-plus-circle mr-2"></i> Nouvel Article
+                </a>
+            </div>
+        </div>
 
-        <a href="{{ path('app_article_new') }}" class="btn-create">Créer un nouvel article</a>
+        <div class="bg-white p-6 rounded-lg  mb-8 ">
+            <div class="flex justify-between items-center mb-4">
+                <h4 class="text-xl font-semibold text-gray-700">Filtres</h4>
+                <button id="reset-filters" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-md transition duration-200 flex items-center">
+                    <i class="fas fa-redo mr-2"></i> Réinitialiser
+                </button>
+            </div>
+            <div class="mb-4">
+                <div class="mb-4">
+                    <label for="category-filter" class="block text-gray-700 text-sm font-semibold mb-2">Catégorie</label>
+                    <select id="category-filter" class="border border-gray-300 rounded-md w-52 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200">
+                        <!-- Options chargées dynamiquement -->
+                    </select>
+                </div>
+            </div>
+        </div>
 
-        <table class="article-table">
-            <thead>
+        <div class="overflow-x-auto bg-white rounded-lg shadow-sm border border-gray-100 p-3">
+            <table id="articles-datatable" class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
                 <tr>
-                    <th>Id</th>
-                    <th>Titre</th>
-                    <th>Contenu</th>
-                    <th>Catégorie(s)</th>
-                    <th>Publié le</th>
-                    <th>Actions</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">ID</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">Titre</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">Contenu</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">Catégories</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">Date de création</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">Actions</th>
                 </tr>
-            </thead>
-            <tbody>
-            {% for article in articles %}
-                <tr>
-                    <td>{{ article.id }}</td>
-                    <td>{{ article.title }}</td>
-                    <td>
-                        <div class="content-preview">{{ article.content }}</div>
-                    </td>
-                    <td>
-                        {% for category in article.categories %}
-                            <span class="category-badge">{{ category.name }}</span>
-                        {% endfor %}
-                    </td>
-                    <td>{{ article.createdAt|date("d/m/Y") }}</td>
-                    <td>
-                        <a href="{{ path('app_article_edit', {'id': article.id}) }}" class="action-link">éditer</a>
-                    </td>
-                </tr>
-            {% else %}
-                <tr>
-                    <td colspan="6" style="text-align: center; padding: 20px;">Liste vide</td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-
-        <div class="pagination-container">
-            {% if page > 1 %}
-                <a href="{{ path('app_article_index', {page: page - 1}) }}" class="pagination-btn"><i class="bi bi-arrow-left"></i> Précédent</a>
-            {% endif %}
-
-            {% if page < maxPage %}
-                <a href="{{ path('app_article_index', {page: page + 1}) }}" class="pagination-btn">Suivant<i class="bi bi-arrow-right"></i></a>
-            {% endif %}
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                <!-- Les données seront chargées dynamiquement par DataTables -->
+                </tbody>
+            </table>
         </div>
     </div>
 {% endblock %}

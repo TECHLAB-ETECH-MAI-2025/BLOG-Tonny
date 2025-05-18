@@ -6,7 +6,6 @@ use App\Entity\Article;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 use Doctrine\Persistence\ManagerRegistry;
-use Symfony\Component\HttpFoundation\Request;
 
 /**
  * @extends ServiceEntityRepository<Article>
@@ -28,11 +27,12 @@ class ArticleRepository extends ServiceEntityRepository
      */
     public function paginateArticles(int $page, int $limit): Paginator
     {
-        return new Paginator($this->createQueryBuilder('r')
-            ->setFirstResult(($page - 1) * $limit)
-            ->setMaxResults($limit)
-            ->getQuery()
-            ->setHint(Paginator::HINT_ENABLE_DISTINCT, false),
+        return new Paginator(
+            $this->createQueryBuilder('r')
+                ->setFirstResult(($page - 1) * $limit)
+                ->setMaxResults($limit)
+                ->getQuery()
+                ->setHint(Paginator::HINT_ENABLE_DISTINCT, false),
             false
         );
     }
@@ -67,36 +67,100 @@ class ArticleRepository extends ServiceEntityRepository
     {
         return $this->createQueryBuilder('a')
             ->where('a.title LIKE :query')
-            ->setParameter('query', '%'.$query.'%')
+            ->setParameter('query', '%' . $query . '%')
             ->orderBy('a.createdAt', 'DESC')
             ->setMaxResults($limit)
             ->getQuery()
             ->getResult();
     }
 
+    /**
+     * Fournit les articles pour DataTables (tri, recherche, pagination, filtrage par catégorie).
+     *
+     * @param int $start Décalage de départ pour la pagination (offset)
+     * @param int $length Nombre d'articles à retourner (limit)
+     * @param string $search Terme de recherche (titre ou contenu)
+     * @param array|null $order Tableau pour le tri (ex: ['column'=>1, 'dir'=>'desc'])
+     * @param string|null $categoryId Id de catégorie pour filtrer
+     * @return Article[] Tableau d'articles correspondant aux critères
+     */
+    public function findForDataTable(int $start, int $length, string $search = '', ?array $order = null, ?string $categoryId = null): array
+    {
+        $qb = $this->createQueryBuilder('a')
+            ->leftJoin('a.categories', 'c')
+            ->addSelect('c');
 
-    //    /**
-    //     * @return Article[] Returns an array of Article objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('a')
-    //            ->andWhere('a.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('a.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
+        // Recherche texte (titre ou contenu)
+        if (!empty($search)) {
+            $qb->andWhere('a.title LIKE :search OR a.content LIKE :search')
+                ->setParameter('search', '%' . $search . '%');
+        }
 
-    //    public function findOneBySomeField($value): ?Article
-    //    {
-    //        return $this->createQueryBuilder('a')
-    //            ->andWhere('a.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
+        // Filtrage par catégorie si demandé
+        if (!empty($categoryId)) {
+            $qb->andWhere(':categoryId MEMBER OF a.categories')
+                ->setParameter('categoryId', $categoryId);
+        }
+
+        // Tri dynamique selon la colonne demandée par DataTables
+        if ($order) {
+            $columnIndex = $order['column'] ?? 0;
+            $direction = $order['dir'] ?? 'asc';
+
+            switch ($columnIndex) {
+                case 0: $qb->orderBy('a.id', $direction); break;
+                case 1: $qb->orderBy('a.title', $direction); break;
+                case 2: $qb->orderBy('a.content', $direction); break;
+                case 4: $qb->orderBy('a.createdAt', $direction); break;
+                default: $qb->orderBy('a.createdAt', 'DESC');
+            }
+        } else {
+            $qb->orderBy('a.createdAt', 'DESC');
+        }
+
+        // Pagination (offset et limit)
+        return $qb->setFirstResult($start)
+            ->setMaxResults($length)
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Compte tous les articles (pour DataTables, total général).
+     *
+     * @return int Nombre total d'articles
+     */
+    public function countAll(): int
+    {
+        return $this->createQueryBuilder('a')
+            ->select('COUNT(a.id)')
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    /**
+     * Compte les articles filtrés (après recherche/catégorie).
+     *
+     * @param string $search Terme de recherche
+     * @param string|null $categoryId Id de catégorie pour filtrer
+     * @return int Nombre d'articles filtrés
+     */
+    public function countFiltered(string $search = '', ?string $categoryId = null): int
+    {
+        $qb = $this->createQueryBuilder('a')
+            ->select('COUNT(a.id)');
+
+        if (!empty($search)) {
+            $qb->andWhere('a.title LIKE :search OR a.content LIKE :search')
+                ->setParameter('search', '%' . $search . '%');
+        }
+
+        if (!empty($categoryId)) {
+            $qb->leftJoin('a.categories', 'c')
+                ->andWhere(':categoryId MEMBER OF a.categories')
+                ->setParameter('categoryId', $categoryId);
+        }
+
+        return $qb->getQuery()->getSingleScalarResult();
+    }
 }

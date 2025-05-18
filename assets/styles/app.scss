@@ -8,3 +8,49 @@ body {
   font-family: 'Inter', sans-serif;
   background-color: #f5f7fa;
 }
+.dt-info {
+  color: #6c757d;
+  font-size: 0.875rem;
+}
+
+.pagination {
+  margin-top: 1rem;
+}
+.dt-paging-button {
+  cursor: pointer;
+  background-color: white;
+}
+.dt-paging-button:hover:not(.current) {
+  background-color: #f8f9fa;
+}
+.dt-paging-button.current {
+  background-color: #24262b;
+  color: white;
+}
+.dt-search {
+  color: #6c757d;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+.dt-search label {
+}
+
+.dt-search input {
+  border-radius: 0.25rem;
+  width: 200px;
+  margin-right: 1rem;
+}
+
+.dt-length {
+  font-size: 0.875rem;
+  color: #6c757d;
+  margin-bottom: 1rem;
+}
+
+.dt-length label {
+  margin-right: 0.5rem;
+}
+
+.dt-length select {
+}

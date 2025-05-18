@@ -16,7 +16,8 @@ class CategoryRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, Category::class);
     }
-    public  function paginateCategories(int $page, int $limit): Paginator
+
+    public function paginateCategories(int $page, int $limit): Paginator
     {
         return new Paginator($this->createQueryBuilder('r')
             ->setFirstResult(($page - 1) * $limit)
@@ -25,6 +26,14 @@ class CategoryRepository extends ServiceEntityRepository
             ->setHint(Paginator::HINT_ENABLE_DISTINCT, false),
             false
         );
+    }
+
+    public function findAllOrdered(): array
+    {
+        return $this->createQueryBuilder('c')
+            ->orderBy('c.name', 'ASC')
+            ->getQuery()
+            ->getResult();
     }
 
     //    /**
