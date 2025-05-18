@@ -15,7 +15,6 @@ require('datatables.net-bs5');
 require('datatables.net-responsive-bs5');
 
 // Import your custom script
-import './article.js';
 
 // Initialiser DataTables
 $(document).ready(function() {

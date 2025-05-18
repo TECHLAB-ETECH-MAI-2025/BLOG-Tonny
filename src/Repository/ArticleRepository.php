@@ -58,6 +58,22 @@ class ArticleRepository extends ServiceEntityRepository
 
         return $paginator;
     }
+    /**
+     * Recherche des articles par titre (partiel ou entier)
+     * @param string $query Le titre en question
+     * @return array Tableau des résultats
+     */
+    public function searchByTitle(string $query, int $limit = 5): array
+    {
+        return $this->createQueryBuilder('a')
+            ->where('a.title LIKE :query')
+            ->setParameter('query', '%'.$query.'%')
+            ->orderBy('a.createdAt', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
+
 
     //    /**
     //     * @return Article[] Returns an array of Article objects

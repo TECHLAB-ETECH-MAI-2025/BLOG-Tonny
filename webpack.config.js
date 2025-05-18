@@ -6,7 +6,9 @@ Encore
     .setPublicPath('/build')
     .addEntry('app', './assets/app.js')
     // Ajout de l'entrée pour la page d'article
-    .addEntry('article-page', './assets/js/pages/article-page.js')
+    .addEntry('article-page', './assets/js/article-page.js')
+    // Pour la recherche d'articles
+    .addEntry('search', './assets/js/search.js')
     .enableStimulusBridge('./assets/controllers.json')
     .splitEntryChunks()
     .enableSingleRuntimeChunk()

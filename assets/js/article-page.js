@@ -1,4 +1,4 @@
-import ArticleComments from '../article-comments';
+import ArticleComments from './article-comments';
 
 /**
  * Initialisation de la page d'article
