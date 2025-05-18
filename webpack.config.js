@@ -9,6 +9,7 @@ Encore
     .addEntry('article-page', './assets/js/article-page.js')
     // Pour la recherche d'articles
     .addEntry('search', './assets/js/search.js')
+    .addEntry('likes', './assets/js/likes.js')
     .enableStimulusBridge('./assets/controllers.json')
     .splitEntryChunks()
     .enableSingleRuntimeChunk()

@@ -17,10 +17,6 @@ class Search {
     setupEventListeners() {
         this.$searchInput.on('input', this.handleInput.bind(this));
         $(document).on('click', this.handleDocumentClick.bind(this));
-
-        if (this.$searchForm.length) {
-            this.$searchForm.on('submit', this.handleFormSubmit.bind(this));
-        }
     }
     /*
     * Écoute sur la barre de recherche

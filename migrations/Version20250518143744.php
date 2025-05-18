@@ -10,7 +10,7 @@ use Doctrine\Migrations\AbstractMigration;
 /**
  * Auto-generated Migration: Please modify to your needs!
  */
-final class Version20250514100256 extends AbstractMigration
+final class Version20250518143744 extends AbstractMigration
 {
     public function getDescription(): string
     {
@@ -33,6 +33,12 @@ final class Version20250514100256 extends AbstractMigration
             CREATE TABLE comment (id INT AUTO_INCREMENT NOT NULL, article_id INT NOT NULL, author VARCHAR(255) NOT NULL, content LONGTEXT NOT NULL, created_at DATETIME NOT NULL COMMENT '(DC2Type:datetime_immutable)', INDEX IDX_9474526C7294869C (article_id), PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB
         SQL);
         $this->addSql(<<<'SQL'
+            CREATE TABLE doctrine_schema_validate (id INT AUTO_INCREMENT NOT NULL, PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB
+        SQL);
+        $this->addSql(<<<'SQL'
+            CREATE TABLE `like` (id INT AUTO_INCREMENT NOT NULL, user_id INT NOT NULL, article_id INT NOT NULL, INDEX IDX_AC6340B3A76ED395 (user_id), INDEX IDX_AC6340B37294869C (article_id), PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB
+        SQL);
+        $this->addSql(<<<'SQL'
             CREATE TABLE user (id INT AUTO_INCREMENT NOT NULL, username VARCHAR(180) NOT NULL, roles JSON NOT NULL, password VARCHAR(255) NOT NULL, email VARCHAR(255) NOT NULL, UNIQUE INDEX UNIQ_IDENTIFIER_USERNAME (username), PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB
         SQL);
         $this->addSql(<<<'SQL'
@@ -46,6 +52,12 @@ final class Version20250514100256 extends AbstractMigration
         SQL);
         $this->addSql(<<<'SQL'
             ALTER TABLE comment ADD CONSTRAINT FK_9474526C7294869C FOREIGN KEY (article_id) REFERENCES article (id)
+        SQL);
+        $this->addSql(<<<'SQL'
+            ALTER TABLE `like` ADD CONSTRAINT FK_AC6340B3A76ED395 FOREIGN KEY (user_id) REFERENCES user (id)
+        SQL);
+        $this->addSql(<<<'SQL'
+            ALTER TABLE `like` ADD CONSTRAINT FK_AC6340B37294869C FOREIGN KEY (article_id) REFERENCES article (id)
         SQL);
     }
 
@@ -62,6 +74,12 @@ final class Version20250514100256 extends AbstractMigration
             ALTER TABLE comment DROP FOREIGN KEY FK_9474526C7294869C
         SQL);
         $this->addSql(<<<'SQL'
+            ALTER TABLE `like` DROP FOREIGN KEY FK_AC6340B3A76ED395
+        SQL);
+        $this->addSql(<<<'SQL'
+            ALTER TABLE `like` DROP FOREIGN KEY FK_AC6340B37294869C
+        SQL);
+        $this->addSql(<<<'SQL'
             DROP TABLE article
         SQL);
         $this->addSql(<<<'SQL'
@@ -72,6 +90,12 @@ final class Version20250514100256 extends AbstractMigration
         SQL);
         $this->addSql(<<<'SQL'
             DROP TABLE comment
+        SQL);
+        $this->addSql(<<<'SQL'
+            DROP TABLE doctrine_schema_validate
+        SQL);
+        $this->addSql(<<<'SQL'
+            DROP TABLE `like`
         SQL);
         $this->addSql(<<<'SQL'
             DROP TABLE user

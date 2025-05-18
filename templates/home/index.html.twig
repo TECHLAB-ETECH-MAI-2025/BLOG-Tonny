@@ -4,12 +4,6 @@
 
 {% block stylesheets %}
     {{ parent() }}
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-    </style>
 {% endblock %}
 
 {% block body %}
@@ -49,10 +43,24 @@
                                 {{ article.content|length > 150 ? article.content|slice(0, 150) ~ '...' : article.content }}
                             </p>
 
-                            <a href="{{ path('app_article_show', {'id': article.id}) }}" class="text-blue-500 font-medium hover:underline inline-block">
-                                Lire plus →
-                            </a>
+                            <div class="flex justify-between items-center mt-4">
+                                <a href="{{ path('app_article_show', {'id': article.id}) }}"
+                                   class="text-blue-500 font-medium hover:underline inline-block">
+                                    Lire plus →
+                                </a>
+                                <div class="flex items-center space-x-2">
+                                    <button class="like-btn flex items-center justify-center p-2 rounded-full hover:bg-gray-100 transition-colors"
+                                            data-article-id="{{ article.id }}"
+                                            data-liked="{{ app.user and article.isLikedBy(app.user) ? 'true' : 'false' }}"
+                                            data-csrf="{{ csrf_token('like' ~ article.id) }}">
+                                        <i class="{{ app.user and article.isLikedBy(app.user) ? 'fas text-red-500' : 'far text-gray-500' }} fa-heart"></i>
+                                    </button>
+                                    <span class="like-count text-sm"
+                                          data-article-id="{{ article.id }}">{{ article.likes|length }}</span>
+                                </div>
+                            </div>
                         </div>
+
                     </div>
                 {% endfor %}
             {% else %}
@@ -64,7 +72,9 @@
 
         <div class="pagination-container flex justify-center items-center mt-12">
             {% if page > 1 %}
-                <a href="{{ path('app_home', {page: page - 1}) }}" class="px-4 py-2 bg-gray-200 text-gray-700 border border-gray-300 rounded hover:bg-gray-300 hover:text-gray-800 transition-all duration-200"><i class="bi bi-chevron-left"></i></a>
+                <a href="{{ path('app_home', {page: page - 1}) }}"
+                   class="px-4 py-2 bg-gray-200 text-gray-700 border border-gray-300 rounded hover:bg-gray-300 hover:text-gray-800 transition-all duration-200"><i
+                            class="bi bi-chevron-left"></i></a>
             {% endif %}
 
             {# Ajout de la pagination numérotée #}
@@ -72,7 +82,8 @@
 
             {% if maxPage > 1 %}
                 {% if page > pageRange + 1 %}
-                    <a href="{{ path('app_home', {page: 1}) }}" class="px-3 py-2 bg-gray-200 text-gray-700 border border-gray-300 rounded hover:bg-gray-300 hover:text-gray-800 transition-all duration-200 mx-1 min-w-10 text-center">1</a>
+                    <a href="{{ path('app_home', {page: 1}) }}"
+                       class="px-3 py-2 bg-gray-200 text-gray-700 border border-gray-300 rounded hover:bg-gray-300 hover:text-gray-800 transition-all duration-200 mx-1 min-w-10 text-center">1</a>
 
                     {% if page > pageRange + 2 %}
                         <span class="px-3 py-2 text-gray-500 mx-1">...</span>
@@ -83,7 +94,8 @@
                     {% if i == page %}
                         <span class="px-3 py-2 bg-gray-600 text-white border border-gray-500 rounded mx-1 min-w-10 text-center">{{ i }}</span>
                     {% else %}
-                        <a href="{{ path('app_home', {page: i}) }}" class="px-3 py-2 bg-gray-200 text-gray-700 border border-gray-300 rounded hover:bg-gray-300 hover:text-gray-800 transition-all duration-200 mx-1 min-w-10 text-center">{{ i }}</a>
+                        <a href="{{ path('app_home', {page: i}) }}"
+                           class="px-3 py-2 bg-gray-200 text-gray-700 border border-gray-300 rounded hover:bg-gray-300 hover:text-gray-800 transition-all duration-200 mx-1 min-w-10 text-center">{{ i }}</a>
                     {% endif %}
                 {% endfor %}
 
@@ -92,12 +104,15 @@
                         <span class="px-3 py-2 text-gray-500 mx-1">...</span>
                     {% endif %}
 
-                    <a href="{{ path('app_home', {page: maxPage}) }}" class="px-3 py-2 bg-gray-200 text-gray-700 border border-gray-300 rounded hover:bg-gray-300 hover:text-gray-800 transition-all duration-200 mx-1 min-w-10 text-center">{{ maxPage }}</a>
+                    <a href="{{ path('app_home', {page: maxPage}) }}"
+                       class="px-3 py-2 bg-gray-200 text-gray-700 border border-gray-300 rounded hover:bg-gray-300 hover:text-gray-800 transition-all duration-200 mx-1 min-w-10 text-center">{{ maxPage }}</a>
                 {% endif %}
             {% endif %}
 
             {% if page < maxPage %}
-                <a href="{{ path('app_home', {page: page + 1}) }}" class="px-4 py-2 bg-gray-200 text-gray-700 border border-gray-300 rounded hover:bg-gray-300 hover:text-gray-800 transition-all duration-200"><i class="bi bi-chevron-right"></i></a>
+                <a href="{{ path('app_home', {page: page + 1}) }}"
+                   class="px-4 py-2 bg-gray-200 text-gray-700 border border-gray-300 rounded hover:bg-gray-300 hover:text-gray-800 transition-all duration-200"><i
+                            class="bi bi-chevron-right"></i></a>
             {% endif %}
         </div>
     </div>
