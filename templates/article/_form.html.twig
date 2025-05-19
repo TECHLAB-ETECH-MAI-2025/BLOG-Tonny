@@ -1,15 +1,26 @@
 {{ form_start(form) }}
-    <div class="form-group">
-        {{ form_label(form.title) }}
-        {{ form_widget(form.title, {'attr': {'class': 'form-control'}}) }}
+<div class="form-group">
+    {{ form_label(form.title) }}
+    {{ form_widget(form.title, {'attr': {'class': 'form-control'}}) }}
+</div>
+<div class="form-group">
+    {{ form_label(form.content) }}
+    {{ form_widget(form.content, {'attr': {'class': 'form-control'}}) }}
+</div>
+<div class="form-group mb-2">
+    {{ form_label(form.categories) }}
+    {{ form_widget(form.categories, {'attr': {'class': 'form-control'}}) }}
+</div>
+{% if article.id is defined and article.id %}
+    <div class="flex flex-row justify-content-between">
+        <button type="submit" class="btn btn-primary">{{ button_label|default('Enregistrer') }}</button>
+        {{ include('article/_delete_form.html.twig') }}
     </div>
-    <div class="form-group">
-        {{ form_label(form.content) }}
-        {{ form_widget(form.content, {'attr': {'class': 'form-control'}}) }}
+{% else %}
+    <div class="flex flex-row justify-content-between">
+        <button type="submit" class="btn btn-primary">{{ button_label|default('Enregistrer') }}</button>
     </div>
-    <div class="form-group">
-        {{ form_label(form.categories) }}
-        {{ form_widget(form.categories, {'attr': {'class': 'form-control'}}) }}
-    </div>
-    <button type="submit" class="btn btn-primary">{{ button_label|default('Enregistrer') }}</button>
+{% endif %}
+
+
 {{ form_end(form) }}

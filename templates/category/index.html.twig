@@ -116,7 +116,7 @@
                     <td>{{ category.name }}</td>
                     <td>{{ category.description }}</td>
                     <td>
-                        <a href="{{ path('app_category_edit', {'id': category.id}) }}" class="action-link">éditer</a>
+                        <a href="{{ path('app_category_edit', {'id': category.id}) }}" class="action-link"><i class="fas fa-edit mr-1"></i> Éditer</a>
                     </td>
                 </tr>
             {% else %}
@@ -128,11 +128,11 @@
         </table>
         <div class="pagination-container">
             {% if page > 1 %}
-                <a href="{{ path('app_category_index', {page: page - 1}) }}" class="pagination-btn"><i class="bi bi-arrow-left"></i> Précédent</a>
+                <a href="{{ path('app_category_index', {page: page - 1}) }}" class="pagination-btn"><i class="bi bi-chevron-left"></i> Précédent</a>
             {% endif %}
 
             {% if page < maxPage %}
-                <a href="{{ path('app_category_index', {page: page + 1}) }}" class="pagination-btn">Suivant <i class="bi bi-arrow-right"></i> </a>
+                <a href="{{ path('app_category_index', {page: page + 1}) }}" class="pagination-btn">Suivant <i class="bi bi-chevron-right"></i> </a>
             {% endif %}
         </div>
     </div>

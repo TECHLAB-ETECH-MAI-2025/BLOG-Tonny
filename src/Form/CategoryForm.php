@@ -32,11 +32,6 @@ class CategoryForm extends AbstractType
                     'placeholder' => 'Description de la catégorie',
                     'rows' => 3
                 ]
-            ])->add('save', SubmitType::class, [
-                'label' => 'Enregistrer',
-                'attr' => [
-                    'class' => 'btn btn-primary mt-3',
-                ]
             ])
         ;
     }
