@@ -30,7 +30,7 @@ final class CategoryController extends AbstractController
     public function index(CategoryRepository $categoryRepository, Request $request): Response
     {
         $page = $request->query->getInt('page', 1);
-        $categories = $categoryRepository->paginateCategories($page, $limit = 2);
+        $categories = $categoryRepository->paginateCategories($page, $limit = 10);
         $maxPage = ceil($categories->count() / $limit);
         return $this->render('category/index.html.twig', [
             'categories' => $categories,

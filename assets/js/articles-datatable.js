@@ -88,9 +88,6 @@ export function initArticlesDataTable() {
                                     <a href="/article/${data}/edit" class="text-blue-600 hover:text-blue-900 font-medium transition duration-150">
                                         <i class="fas fa-edit mr-1"></i> Éditer
                                     </a>
-                                    <a href="#" class="text-red-600 hover:text-red-900 font-medium transition duration-150 delete-article" data-id="${data}">
-                                        <i class="fas fa-trash mr-1"></i> Supprimer
-                                    </a>
                                 </div>
                             `;
                         },

@@ -14,7 +14,7 @@
 {% if article.id is defined and article.id %}
     <div class="flex flex-row justify-content-between">
         <button type="submit" class="btn btn-primary">{{ button_label|default('Enregistrer') }}</button>
-        {{ include('article/_delete_form.html.twig') }}
+      <!--  {{ include('article/_delete_form.html.twig') }}-->
     </div>
 {% else %}
     <div class="flex flex-row justify-content-between">

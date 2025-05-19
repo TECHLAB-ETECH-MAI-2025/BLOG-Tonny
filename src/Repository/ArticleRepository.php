@@ -27,14 +27,7 @@ class ArticleRepository extends ServiceEntityRepository
      */
     public function paginateArticles(int $page, int $limit): Paginator
     {
-        return new Paginator(
-            $this->createQueryBuilder('r')
-                ->setFirstResult(($page - 1) * $limit)
-                ->setMaxResults($limit)
-                ->getQuery()
-                ->setHint(Paginator::HINT_ENABLE_DISTINCT, false),
-            false
-        );
+        return $this->paginate($page, $limit);
     }
 
     /**
@@ -47,9 +40,27 @@ class ArticleRepository extends ServiceEntityRepository
      */
     public function paginateArticlesDesc(int $page, int $limit): Paginator
     {
-        $query = $this->createQueryBuilder('a')
-            ->orderBy('a.createdAt', 'DESC')
-            ->getQuery();
+        return $this->paginate($page, $limit, "createdAt", "DESC");
+    }
+
+    /**
+     * Refactorisation de la logique de pagination
+     *
+     * @param int $page Le numéro de page à afficher
+     * @param int $limit Le nombre d'articles par page
+     * @param string|null $orderField Le nom de la colonne pour faire l'ordre
+     * @param string|null $orderDirection La direction selon ASC ou DESC
+     * @return Paginator L'objet de pagination avec les résultats
+     */
+    private function paginate(int $page, int $limit, string $orderField = null, string $orderDirection = null): Paginator
+    {
+        $queryBuilder = $this->createQueryBuilder('a');
+
+        if ($orderField !== null) {
+            $queryBuilder->orderBy("a.$orderField", $orderDirection);
+        }
+
+        $query = $queryBuilder->getQuery();
 
         $paginator = new Paginator($query);
         $paginator->getQuery()
@@ -58,6 +69,7 @@ class ArticleRepository extends ServiceEntityRepository
 
         return $paginator;
     }
+
     /**
      * Recherche des articles par titre (partiel ou entier)
      * @param string $query Le titre en question
@@ -108,11 +120,20 @@ class ArticleRepository extends ServiceEntityRepository
             $direction = $order['dir'] ?? 'asc';
 
             switch ($columnIndex) {
-                case 0: $qb->orderBy('a.id', $direction); break;
-                case 1: $qb->orderBy('a.title', $direction); break;
-                case 2: $qb->orderBy('a.content', $direction); break;
-                case 4: $qb->orderBy('a.createdAt', $direction); break;
-                default: $qb->orderBy('a.createdAt', 'DESC');
+                case 0:
+                    $qb->orderBy('a.id', $direction);
+                    break;
+                case 1:
+                    $qb->orderBy('a.title', $direction);
+                    break;
+                case 2:
+                    $qb->orderBy('a.content', $direction);
+                    break;
+                case 4:
+                    $qb->orderBy('a.createdAt', $direction);
+                    break;
+                default:
+                    $qb->orderBy('a.createdAt', 'DESC');
             }
         } else {
             $qb->orderBy('a.createdAt', 'DESC');

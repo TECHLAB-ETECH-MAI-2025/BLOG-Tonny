@@ -115,8 +115,10 @@
                     <td>{{ category.id }}</td>
                     <td>{{ category.name }}</td>
                     <td>{{ category.description }}</td>
-                    <td>
+                    <td class="flex flex-row gap-2">
                         <a href="{{ path('app_category_edit', {'id': category.id}) }}" class="action-link"><i class="fas fa-edit mr-1"></i> Éditer</a>
+                        {{ include('category/_delete_form.html.twig') }}
+
                     </td>
                 </tr>
             {% else %}
