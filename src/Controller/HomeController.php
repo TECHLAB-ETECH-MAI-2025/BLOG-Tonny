@@ -171,4 +171,18 @@ final class HomeController extends AbstractController
             $articlesCreated . ' articles créés.'
         );
     }
+    #[Route('/user/delete/{id}', name: 'app_user_delete')]
+    public function deleteUser(int $id, EntityManagerInterface $entityManager): Response
+    {
+        $user = $entityManager->getRepository(User::class)->find($id);
+
+        if (!$user) {
+            throw $this->createNotFoundException('The user does not exist');
+        }
+
+        $entityManager->remove($user);
+        $entityManager->flush();
+
+        return new Response('User deleted successfully');
+    }
 }

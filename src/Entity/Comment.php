@@ -21,6 +21,7 @@ class Comment
 
     #[ORM\Column(type: Types::TEXT)]
     #[Assert\NotBlank]
+    #[Assert\Length(min: 1, max: 65535)]
     private ?string $content = null;
 
     #[ORM\Column]

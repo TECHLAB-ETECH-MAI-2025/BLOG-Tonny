@@ -101,21 +101,30 @@ const ArticleComments = {
 
                     this.addNewComment(author, content);
                 } else {
-                    this.showErrorMessage(data.message || 'Erreur lors de l\'ajout du commentaire');
+                    this.showErrorMessage(data.message);
                 }
             },
             error: (xhr, status, error) => {
                 console.error('Erreur:', error);
 
-                // Vérifie si l'utilisateur a été redirigé vers la page de connexion
-                if (xhr.responseURL && xhr.responseURL.includes('/login')) {
-                    this.showErrorMessage('Vous devez être connecté pour commenter');
-                } else if (xhr.responseText && xhr.responseText.includes('DOCTYPE html')) {
+                // Check if the response indicates a need for redirection
+                if (xhr.responseJSON && xhr.responseJSON.redirect) {
+                    this.showErrorMessage('Vous devez être connecté pour commenter. Redirection vers la page de connexion...');
+                    setTimeout(() => {
+                        window.location.href = xhr.responseJSON.redirect;
+                    }, 1000);
+                }  else if (xhr.responseText && xhr.responseText.includes('DOCTYPE html')) {
                     this.showErrorMessage('Session expirée. Veuillez vous reconnecter.');
+                } else if (xhr.status === 400) {
+                    this.showErrorMessage('Requête invalide. Veuillez vérifier les données du formulaire.');
+                } else if (xhr.status === 500) {
+                    this.showErrorMessage('Erreur interne du serveur. Veuillez réessayer plus tard.');
                 } else {
-                    this.showErrorMessage('Une erreur est survenue lors de l\'envoi du commentaire');
+                    this.showErrorMessage('Une erreur est survenue lors de l\'envoi du commentaire. Veuillez réessayer.');
                 }
             },
+
+
             complete: () => {
                 // Réinitialise l'état du bouton
                 $submitBtn.html(originalBtnText);

@@ -23,7 +23,7 @@ class Category
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $description = null;
 
-    #[ORM\ManyToMany(targetEntity: Article::class, mappedBy: 'categories')]
+    #[ORM\ManyToMany(targetEntity: Article::class, mappedBy: 'categories', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $articles;
 
     public function __construct()

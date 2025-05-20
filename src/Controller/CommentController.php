@@ -33,6 +33,7 @@ class CommentController extends AbstractController
     }
 
     #[Route('/new', name: 'app_comment_new', methods: ['GET', 'POST'])]
+    #[isGranted('ROLE_USER')]
     public function new(Request $request, EntityManagerInterface $entityManager): Response
     {
         $comment = new Comment();
@@ -57,6 +58,15 @@ class CommentController extends AbstractController
     {
         $response = new Response();
         $response->headers->set('Content-Type', 'application/json');
+
+        if (!$this->isGranted('ROLE_USER')) {
+            $response->setContent(json_encode([
+                'success' => false,
+                'redirect' => $this->generateUrl('app_login')
+            ]));
+            $response->setStatusCode(Response::HTTP_UNAUTHORIZED);
+            return $response;
+        }
 
         $comment = new Comment();
 
@@ -86,6 +96,7 @@ class CommentController extends AbstractController
 
         return $response;
     }
+
 
     #[Route('/{id}', name: 'app_comment_show', methods: ['GET'])]
     #[IsGranted('ROLE_ADMIN')]
@@ -119,7 +130,7 @@ class CommentController extends AbstractController
     #[IsGranted('ROLE_ADMIN')]
     public function delete(Request $request, Comment $comment, EntityManagerInterface $entityManager): Response
     {
-        if ($this->isCsrfTokenValid('delete'.$comment->getId(), $request->request->get('_token'))) {
+        if ($this->isCsrfTokenValid('delete' . $comment->getId(), $request->request->get('_token'))) {
             $entityManager->remove($comment);
             $entityManager->flush();
         }

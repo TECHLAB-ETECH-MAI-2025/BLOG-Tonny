@@ -186,7 +186,7 @@
                     <div class="mb-3">
                         <label for="comment_author" class="block text-sm font-medium text-gray-700 mb-1">Votre
                             nom</label>
-                        <input type="text" value="{{ app.user.username }}"  id="comment_author" name="comment[author]"
+                        <input type="text" value="{{ app.user.username | default('')  }}"  id="comment_author" name="comment[author]"
                                class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
                                required>
                     </div>

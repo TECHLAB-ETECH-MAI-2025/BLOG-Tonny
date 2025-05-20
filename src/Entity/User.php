@@ -38,8 +38,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      * @var string The hashed password
      */
     #[ORM\Column]
-    #[Assert\Length(min: 3, max: 255)]
-    //#[Assert\PasswordStrength]
+    #[Assert\Length(min: 8, max: 255)]
+    #[Assert\PasswordStrength([
+        'minScore' => Assert\PasswordStrength::STRENGTH_MEDIUM,
+        'message' => 'The password does not meet the required strength criteria.'
+    ])]
     private ?string $password = null;
 
     #[ORM\Column(length: 255)]
@@ -50,7 +53,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     /**
      * @var Collection<int, Like>
      */
-    #[ORM\OneToMany(targetEntity: Like::class, mappedBy: 'user', orphanRemoval: true)]
+    #[ORM\OneToMany(targetEntity: Like::class, mappedBy: 'user', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $likes;
 
     public function __construct()
