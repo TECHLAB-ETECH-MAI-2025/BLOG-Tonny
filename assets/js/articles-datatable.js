@@ -82,10 +82,10 @@ export function initArticlesDataTable() {
                         render: function (data) {
                             return `
                                 <div class="flex space-x-2">
-                                    <a href="/article/${data}" class="text-indigo-600 hover:text-indigo-900 font-medium transition duration-150">
+                                    <a href="/admin/article/${data}" class="text-indigo-600 hover:text-indigo-900 font-medium transition duration-150">
                                         <i class="fas fa-eye mr-1"></i> Voir
                                     </a>
-                                    <a href="/article/${data}/edit" class="text-blue-600 hover:text-blue-900 font-medium transition duration-150">
+                                    <a href="/admin/article/${data}/edit" class="text-blue-600 hover:text-blue-900 font-medium transition duration-150">
                                         <i class="fas fa-edit mr-1"></i> Éditer
                                     </a>
                                 </div>

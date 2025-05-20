@@ -37,12 +37,12 @@
                 <div class="flex items-center">
                     <div class="relative flex-grow">
                         <label for="search-input"></label><input
-                            id="search-input"
-                            name="q"
-                            type="text"
-                            placeholder="Rechercher des articles..."
-                            class="w-full py-2 pl-3 pr-10 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            autocomplete="off"
+                                id="search-input"
+                                name="q"
+                                type="text"
+                                placeholder="Rechercher des articles..."
+                                class="w-full py-2 pl-3 pr-10 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                autocomplete="off"
                         >
                         <div class="absolute inset-y-0 right-0 flex items-center pr-3">
                             <button type="submit" class="text-gray-400 hover:text-gray-600">
@@ -52,8 +52,8 @@
                     </div>
                 </div>
                 <div
-                    id="search-results"
-                    class="hidden absolute z-50 mt-1 w-full bg-white rounded shadow-lg text-gray-800 max-h-96 overflow-y-auto border border-gray-200"
+                        id="search-results"
+                        class="hidden absolute z-50 mt-1 w-full bg-white rounded shadow-lg text-gray-800 max-h-96 overflow-y-auto border border-gray-200"
                 ></div>
             </form>
         </div>
@@ -63,19 +63,38 @@
                 <li class="mr-6">
                     <a class="text-white" href="{{ path('app_home') }}">Accueil</a>
                 </li>
-            {% if is_granted('ROLE_ADMIN') %}
-                <li class="mr-6">
-                    <a class="text-white" href="{{ path('app_article_index') }}">Articles</a>
-                </li>
-                <li class="mr-6">
-                    <a class="text-white" href="{{ path('app_category_index') }}">Catégories</a>
-                </li>
-            {% endif %}
+                {% if is_granted('ROLE_ADMIN') %}
+                    <li class="mr-6">
+                        <a class="text-white" href="{{ path('app_article_index') }}">Articles</a>
+                    </li>
+                    <li class="mr-6">
+                        <a class="text-white" href="{{ path('app_category_index') }}">Catégories</a>
+                    </li>
+                {% endif %}
             </ul>
             <ul class="flex">
                 {% if app.user %}
-                    <li class="mr-6">
-                        <a class="text-white" href="{{ path('app_logout') }}">Se déconnecter</a>
+                    <li class="mr-6 relative group">
+                        <a class="text-white flex items-center" href="#">
+                            <span class="mr-1">{{ app.user.username }}</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </a>
+                        <ul class="absolute hidden group-hover:block bg-gray-700 rounded shadow-lg  py-1 w-48 z-50">
+                            <li>
+                                <a href="{{ path('app_profile') }}"
+                                   class="block px-4 py-2 text-white hover:bg-gray-600">
+                                    <i class="fas fa-user mr-2"></i> Profil
+                                </a>
+                            </li>
+                            <li class="border-t border-gray-600 mt-1 pt-1">
+                                <a href="{{ path('app_logout') }}" class="block px-4 py-2 text-white hover:bg-gray-600">
+                                    <i class="fas fa-sign-out-alt mr-2"></i> Déconnexion
+                                </a>
+                            </li>
+                        </ul>
                     </li>
                 {% else %}
                     <li class="mr-6">
@@ -90,10 +109,13 @@
 <div class="container mx-auto p-4">
     {% for label, messages in app.flashes %}
         {% for message in messages %}
-            <div class="bg-{{ label }}-100 border border-{{ label }}-400 text-{{ label }}-700 px-4 py-3 rounded relative" role="alert">
+            <div class="flash-message bg-{{ label }}-100 border border-{{ label }}-400 text-{{ label }}-700 px-4 py-3 rounded relative"
+                 role="alert">
                 {{ message }}
                 <span class="absolute top-0 bottom-0 right-0 px-4 py-3">
-                    <svg class="fill-current h-6 w-6 text-{{ label }}-500" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><title>Close</title><path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z"/></svg>
+                    <svg class="fill-current h-6 w-6 text-{{ label }}-500 close-flash" role="button"
+                         xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><title>Close</title><path
+                                d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z"/></svg>
                 </span>
             </div>
         {% endfor %}
@@ -111,6 +133,20 @@
         </div>
     </div>
 </footer>
+<script>
 
+    //closing message flash
+    document.addEventListener('DOMContentLoaded', function() {
+        const closeButtons = document.querySelectorAll('.close-flash');
+
+        closeButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const flashMessage = this.closest('.flash-message');
+                flashMessage.style.display = 'none';
+            });
+        });
+    });
+
+</script>
 </body>
 </html>

@@ -1,0 +1,18 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Réinitialiser votre mot de passe{% endblock %}
+
+{% block body %}
+    <div class="max-w-md mx-auto p-4">
+        <h1 class="text-2xl font-bold mb-4">Réinitialiser votre mot de passe</h1>
+
+        {{ form_start(resetForm) }}
+        <div class="mb-4">
+            {{ form_row(resetForm.plainPassword, { attr: { class: 'w-full p-2 border rounded' } }) }}
+        </div>
+        <button type="submit" class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+            Réinitialiser le mot de passe
+        </button>
+        {{ form_end(resetForm) }}
+    </div>
+{% endblock %}
