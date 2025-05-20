@@ -11,7 +11,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
-#[Route('/article')]
+#[Route('admin/article')]
 final class ArticleController extends AbstractController
 {
     private ArticleService $articleService;

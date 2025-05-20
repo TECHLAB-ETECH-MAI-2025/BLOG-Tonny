@@ -9,7 +9,7 @@
             border-radius: 8px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
         }
-        .required:after {
+        .is_required:after {
             content: " *";
             color: #de6666;
         }
@@ -29,19 +29,19 @@
 
             {{ form_start(registrationForm, {'attr': {'class': 'space-y-4'}}) }}
             <div>
-                {{ form_label(registrationForm.email, 'Email', {'label_attr': {'class': 'form-label required'}}) }}
+                {{ form_label(registrationForm.email, 'Email', {'label_attr': {'class': 'form-label is_required'}}) }}
                 {{ form_widget(registrationForm.email, {'attr': {'class': 'form-control'}}) }}
                 {{ form_errors(registrationForm.email, {'attr': {'class': 'form-error'}}) }}
             </div>
 
             <div>
-                {{ form_label(registrationForm.username, 'Nom d\'utilisateur', {'label_attr': {'class': 'form-label required'}}) }}
+                {{ form_label(registrationForm.username, 'Nom d\'utilisateur', {'label_attr': {'class': 'form-label is_required'}}) }}
                 {{ form_widget(registrationForm.username, {'attr': {'class': 'form-control'}}) }}
                 {{ form_errors(registrationForm.username, {'attr': {'class': 'form-error'}}) }}
             </div>
 
             <div>
-                {{ form_label(registrationForm.plainPassword, 'Mot de passe', {'label_attr': {'class': 'form-label required'}}) }}
+                {{ form_label(registrationForm.plainPassword, 'Mot de passe', {'label_attr': {'class': 'form-label is_required'}}) }}
                 {{ form_widget(registrationForm.plainPassword, {'attr': {'class': 'form-control'}}) }}
                 {{ form_errors(registrationForm.plainPassword, {'attr': {'class': 'form-error'}}) }}
             </div>
