@@ -2,140 +2,68 @@
 
 {% block title %}Liste des catégories{% endblock %}
 
-{% block stylesheets %}
-    {{ parent() }}
-    <style>
-        .category-table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-            border-radius: 8px;
-            overflow: hidden;
-            margin-bottom: 2rem;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        .category-table th {
-            background-color: #f8f9fa;
-            padding: 16px;
-            font-weight: 600;
-            text-align: left;
-            color: #495057;
-        }
-
-        .category-table td {
-            padding: 16px;
-            border-top: 1px solid #eaeaea;
-            vertical-align: middle;
-        }
-
-        .category-table tr:last-child td {
-            border-bottom: none;
-        }
-
-        .category-table tr:hover {
-            background-color: #f8f9fa;
-        }
-
-        .action-link {
-            color: #007bff;
-            text-decoration: none;
-            font-weight: 500;
-        }
-
-        .action-link:hover {
-            text-decoration: underline;
-        }
-
-        .page-title {
-            margin-bottom: 1.5rem;
-            text-align: center;
-            color: #333;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        .btn-create {
-            display: inline-block;
-            padding: 10px 20px;
-            background-color: #007bff;
-            color: white;
-            text-decoration: none;
-            border-radius: 4px;
-            margin-bottom: 1rem;
-            transition: background-color 0.2s;
-            font-weight: 500;
-        }
-
-        .btn-create:hover {
-            background-color: #0655aa;
-        }
-        .pagination-container {
-            display: flex;
-            justify-content: flex-end;
-            align-items: center;
-            margin-top: 1.5rem;
-        }
-
-        .pagination-btn {
-            padding: 8px 16px;
-            background-color: #f8f9fa;
-            color: #495057;
-            border: 1px solid #dee2e6;
-            text-decoration: none;
-            border-radius: 4px;
-            margin-left: 5px;
-            transition: all 0.2s;
-        }
-
-        .pagination-btn:hover {
-            background-color: #e9ecef;
-            color: #212529;
-        }
-    </style>
-{% endblock %}
-
 {% block body %}
-    <div class="container py-4">
-        <h1 class="page-title">Liste des catégories</h1>
+    <div class="min-h-screen bg-gray-50 py-8">
+        <div class="container mx-auto px-4">
+            <h1 class="text-2xl font-bold text-gray-800 mb-6 text-center">Liste des catégories</h1>
 
-        <a href="{{ path('app_category_new') }}" class="btn-create">Créer une nouvelle catégorie</a>
+            <a href="{{ path('app_category_new') }}"
+               class="inline-block bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-5 rounded-md transition-colors duration-200 mb-4">
+                Créer une nouvelle catégorie
+            </a>
 
-        <table class="category-table">
-            <thead>
-                <tr>
-                    <th>Id</th>
-                    <th>Nom</th>
-                    <th>Description</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-            {% for category in categories %}
-                <tr>
-                    <td>{{ category.id }}</td>
-                    <td>{{ category.name }}</td>
-                    <td>{{ category.description }}</td>
-                    <td class="flex flex-row gap-2">
-                        <a href="{{ path('app_category_edit', {'id': category.id}) }}" class="action-link"><i class="fas fa-edit mr-1"></i> Éditer</a>
-                        {{ include('category/_delete_form.html.twig') }}
+            <div class="bg-white rounded-lg  overflow-hidden mb-8">
+                <table class="w-full">
+                    <thead>
+                    <tr class="bg-gray-50">
+                        <th class="px-4 py-4 text-left text-sm font-semibold text-gray-700">Id</th>
+                        <th class="px-4 py-4 text-left text-sm font-semibold text-gray-700">Nom</th>
+                        <th class="px-4 py-4 text-left text-sm font-semibold text-gray-700">Description</th>
+                        <th class="px-4 py-4 text-left text-sm font-semibold text-gray-700">Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                    {% for category in categories %}
+                        <tr class="hover:bg-gray-50 transition-colors duration-150">
+                            <td class="px-4 py-4 text-sm text-gray-900">{{ category.id }}</td>
+                            <td class="px-4 py-4 text-sm text-gray-900 font-medium">{{ category.name }}</td>
+                            <td class="px-4 py-4 text-sm text-gray-600">{{ category.description }}</td>
+                            <td class="px-4 py-4">
+                                <div class="flex items-center gap-3">
+                                    <a href="{{ path('app_category_edit', {'id': category.id}) }}"
+                                       class="text-blue-600 hover:text-blue-800 font-medium text-sm transition-colors duration-150">
+                                        <i class="fas fa-edit mr-1"></i> Éditer
+                                    </a>
+                                    {{ include('category/_delete_form.html.twig') }}
+                                </div>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="4" class="px-4 py-8 text-center text-gray-500">
+                                Liste vide
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
 
-                    </td>
-                </tr>
-            {% else %}
-                <tr>
-                    <td colspan="4" style="text-align: center; padding: 20px;">Liste vide</td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-        <div class="pagination-container">
-            {% if page > 1 %}
-                <a href="{{ path('app_category_index', {page: page - 1}) }}" class="pagination-btn"><i class="bi bi-chevron-left"></i> Précédent</a>
-            {% endif %}
+            <div class="flex justify-end items-center gap-2">
+                {% if page > 1 %}
+                    <a href="{{ path('app_category_index', {page: page - 1}) }}"
+                       class="bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 hover:border-gray-400 px-3 py-2 rounded-md text-sm font-medium transition-all duration-150 inline-flex items-center">
+                        <i class="bi bi-chevron-left mr-1"></i> Précédent
+                    </a>
+                {% endif %}
 
-            {% if page < maxPage %}
-                <a href="{{ path('app_category_index', {page: page + 1}) }}" class="pagination-btn">Suivant <i class="bi bi-chevron-right"></i> </a>
-            {% endif %}
+                {% if page < maxPage %}
+                    <a href="{{ path('app_category_index', {page: page + 1}) }}"
+                       class="bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 hover:border-gray-400 px-3 py-2 rounded-md text-sm font-medium transition-all duration-150 inline-flex items-center">
+                        Suivant <i class="bi bi-chevron-right ml-1"></i>
+                    </a>
+                {% endif %}
+            </div>
         </div>
     </div>
 {% endblock %}

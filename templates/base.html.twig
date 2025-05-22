@@ -65,6 +65,9 @@
                 </li>
                 {% if is_granted('ROLE_ADMIN') %}
                     <li class="mr-6">
+                        <a class="text-white" href="{{ path('admin_user_index') }}">Users</a>
+                    </li>
+                    <li class="mr-6">
                         <a class="text-white" href="{{ path('app_article_index') }}">Articles</a>
                     </li>
                     <li class="mr-6">

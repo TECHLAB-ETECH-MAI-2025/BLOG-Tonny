@@ -1,0 +1,64 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Gestion des utilisateurs{% endblock %}
+
+{% block body %}
+    <div class="min-h-screen bg-gray-50 py-8">
+        <div class="container mx-auto px-4">
+            <h1 class="text-2xl font-bold text-gray-800 mb-6 text-center">Gestion des utilisateurs</h1>
+
+            <a href="{{ path('admin_user_new') }}"
+               class="inline-block bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-5 rounded-md transition-colors duration-200 mb-4">
+                Créer un utilisateur
+            </a>
+
+            <div class="bg-white rounded-lg overflow-hidden mb-8">
+                <table class="w-full">
+                    <thead>
+                    <tr class="bg-gray-50">
+                        <th class="px-4 py-4 text-left text-sm font-semibold text-gray-700">Pseudo</th>
+                        <th class="px-4 py-4 text-left text-sm font-semibold text-gray-700">Email</th>
+                        <th class="px-4 py-4 text-left text-sm font-semibold text-gray-700">Rôle</th>
+                        <th class="px-4 py-4 text-left text-sm font-semibold text-gray-700">Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                    {% for user in users %}
+                        <tr class="hover:bg-gray-50 transition-colors duration-150">
+                            <td class="px-4 py-4 text-sm text-gray-900">{{ user.username }}</td>
+                            <td class="px-4 py-4 text-sm text-gray-900">{{ user.email }}</td>
+                            <td class="px-4 py-4">
+                                <span class="inline-flex items-center px-2 py-1 rounded-lg text-xs font-medium {{ user.roles[0] == 'ROLE_ADMIN' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800' }}">
+                                    {{ user.roles[0] == 'ROLE_ADMIN' ? 'Admin' : 'User' }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-4">
+                                <div class="flex items-center gap-3">
+                                    <a href="{{ path('admin_user_edit', {'id': user.id}) }}"
+                                       class="text-blue-600 hover:text-blue-800 font-medium text-sm transition-colors duration-150">
+                                        <i class="fas fa-edit mr-1"></i> Éditer
+                                    </a>
+                                    <form method="post" action="{{ path('admin_user_delete', {'id': user.id}) }}"
+                                          class="inline" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?');">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ user.id) }}">
+                                        <button type="submit"
+                                                class="text-red-600 hover:text-red-800 font-medium text-sm transition-colors duration-150">
+                                            <i class="fas fa-trash mr-1"></i> Supprimer
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="4" class="px-4 py-8 text-center text-gray-500">
+                                Aucun utilisateur trouvé
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock %}
