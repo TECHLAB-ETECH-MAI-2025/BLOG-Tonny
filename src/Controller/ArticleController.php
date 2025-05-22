@@ -22,13 +22,7 @@ final class ArticleController extends AbstractController
     }
 
     /**
-     * Affiche une liste paginée des articles.
-     *
-     * Cette méthode est réservée aux administrateurs (ROLE_ADMIN).
-     * Elle récupère la page courante via la requête et utilise le service pour paginer les articles.
-     *
-     * @param Request $request La requête HTTP
-     * @return Response La réponse contenant la vue des articles paginés
+     * Affiche une liste paginée des articles actifs.
      */
     #[Route(name: 'app_article_index', methods: ['GET'])]
     #[isGranted('ROLE_ADMIN')]
@@ -42,12 +36,6 @@ final class ArticleController extends AbstractController
 
     /**
      * Crée un nouvel article.
-     *
-     * Affiche un formulaire de création et traite sa soumission.
-     * Accessible uniquement par un administrateur (ROLE_ADMIN).
-     *
-     * @param Request $request La requête HTTP
-     * @return Response La réponse avec le formulaire ou une redirection après création
      */
     #[Route('/new', name: 'app_article_new', methods: ['GET', 'POST'])]
     #[isGranted('ROLE_ADMIN')]
@@ -70,14 +58,16 @@ final class ArticleController extends AbstractController
     }
 
     /**
-     * Affiche le détail d'un article.
-     *
-     * @param Article $article L'entité Article à afficher (paramConverter)
-     * @return Response La réponse contenant la vue détaillée de l'article
+     * Affiche le détail d'un article (actif uniquement).
      */
     #[Route('/{id}', name: 'app_article_show', methods: ['GET'])]
     public function show(Article $article): Response
     {
+        // Vérifier si l'article est supprimé
+        if ($article->isDeleted()) {
+            throw $this->createNotFoundException('Article non trouvé');
+        }
+
         return $this->render('article/show.html.twig', [
             'article' => $article,
         ]);
@@ -85,18 +75,17 @@ final class ArticleController extends AbstractController
 
     /**
      * Modifie un article existant.
-     *
-     * Affiche et traite le formulaire d'édition pour l'article donné.
-     * Accessible uniquement par un administrateur (ROLE_ADMIN).
-     *
-     * @param Request $request La requête HTTP
-     * @param Article $article L'article à modifier (paramConverter)
-     * @return Response La réponse avec le formulaire ou une redirection après modification
      */
     #[Route('/{id}/edit', name: 'app_article_edit', methods: ['GET', 'POST'])]
     #[isGranted('ROLE_ADMIN')]
     public function edit(Request $request, Article $article): Response
     {
+        // Empêcher la modification d'articles supprimés
+        if ($article->isDeleted()) {
+            $this->addFlash("error", "Impossible de modifier un article supprimé");
+            return $this->redirectToRoute('app_article_index');
+        }
+
         $form = $this->createForm(ArticleForm::class, $article);
         $form->handleRequest($request);
 
@@ -113,13 +102,7 @@ final class ArticleController extends AbstractController
     }
 
     /**
-     * Supprime un article.
-     *
-     * Cette action est protégée par un token CSRF et réservée à un administrateur (ROLE_ADMIN).
-     *
-     * @param Request $request La requête HTTP
-     * @param Article $article L'article à supprimer (paramConverter)
-     * @return Response Redirection vers la liste des articles
+     * Supprime un article (soft delete).
      */
     #[Route('/{id}', name: 'app_article_delete', methods: ['POST'])]
     #[isGranted('ROLE_ADMIN')]

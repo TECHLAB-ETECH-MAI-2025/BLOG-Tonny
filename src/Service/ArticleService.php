@@ -24,11 +24,12 @@ class ArticleService
      *
      * @param int $page La page courante
      * @param int $limit Nombre d'articles par page
+     * @param bool $includeDeleted Inclure les articles supprimés
      * @return array Tableau contenant les articles paginés et les informations de pagination
      */
-    public function getPaginatedArticles(int $page = 1, int $limit = 10): array
+    public function getPaginatedArticles(int $page = 1, int $limit = 10, bool $includeDeleted = false): array
     {
-        $articles = $this->articleRepository->paginateArticles($page, $limit);
+        $articles = $this->articleRepository->paginateArticlesDesc($page, $limit, $includeDeleted);
         $maxPage = ceil($articles->count() / $limit);
 
         return [
@@ -42,7 +43,6 @@ class ArticleService
      * Crée un nouvel article
      *
      * @param Article $article L'article à créer
-     * @return void
      */
     public function createArticle(Article $article): void
     {
@@ -54,7 +54,6 @@ class ArticleService
      * Met à jour un article existant
      *
      * @param Article $article L'article à mettre à jour
-     * @return void
      */
     public function updateArticle(Article $article): void
     {
@@ -62,12 +61,33 @@ class ArticleService
     }
 
     /**
-     * Supprime un article
+     * Supprime un article (soft delete)
      *
      * @param Article $article L'article à supprimer
-     * @return void
      */
     public function deleteArticle(Article $article): void
+    {
+        $article->setDeletedAt(new \DateTimeImmutable());
+        $this->entityManager->flush();
+    }
+
+    /**
+     * Restaure un article supprimé
+     *
+     * @param Article $article L'article à restaurer
+     */
+    public function restoreArticle(Article $article): void
+    {
+        $article->setDeletedAt(null);
+        $this->entityManager->flush();
+    }
+
+    /**
+     * Supprime définitivement un article
+     *
+     * @param Article $article L'article à supprimer définitivement
+     */
+    public function permanentlyDeleteArticle(Article $article): void
     {
         $this->entityManager->remove($article);
         $this->entityManager->flush();

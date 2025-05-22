@@ -41,6 +41,9 @@ class Article
     #[ORM\OneToMany(targetEntity: Like::class, mappedBy: 'article', orphanRemoval: true)]
     private Collection $likes;
 
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $deletedAt = null;
+
     public function __construct()
     {
         $this->categories = new ArrayCollection();
@@ -187,5 +190,50 @@ class Article
             }
         }
         return false;
+    }
+
+    public function getDeletedAt(): ?\DateTimeImmutable
+    {
+        return $this->deletedAt;
+    }
+
+    public function setDeletedAt(?\DateTimeImmutable $deletedAt): static
+    {
+        $this->deletedAt = $deletedAt;
+
+        return $this;
+    }
+    /**
+     * Soft delete the article
+     */
+    public function softDelete(): static
+    {
+        $this->deletedAt = new \DateTimeImmutable();
+        return $this;
+    }
+
+    /**
+     * Restore the article
+     */
+    public function restore(): static
+    {
+        $this->deletedAt = null;
+        return $this;
+    }
+
+    /**
+     * Check if the article is soft deleted
+     */
+    public function isDeleted(): bool
+    {
+        return $this->deletedAt !== null;
+    }
+
+    /**
+     * Check if the article is active (not deleted)
+     */
+    public function isActive(): bool
+    {
+        return $this->deletedAt === null;
     }
 }
