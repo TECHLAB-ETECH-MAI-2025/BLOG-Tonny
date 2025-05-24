@@ -1,0 +1,333 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Chat avec {{ other_user.username }}{% endblock %}
+
+{% block body %}
+    <div class="container-fluid mt-3">
+        <div class="row">
+            <div class="col-12">
+                <div class="card chat-container">
+                    <!-- En-tête du chat -->
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="mb-0">
+                                <i class="fas fa-comments"></i>
+                                Chat avec {{ other_user.username }}
+                            </h5>
+                        </div>
+                        <div>
+                            <a href="{{ path('chat_index') }}" class="btn btn-outline-light btn-sm">
+                                <i class="fas fa-arrow-left"></i> Retour
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Zone des messages -->
+                    <div class="card-body p-0">
+                        <div id="messages-container" class="messages-scroll">
+                            <div id="messages-list">
+                                {% for message in messages %}
+                                    <div class="message-item {{ message.sender.id == current_user.id ? 'sent' : 'received' }}"
+                                         data-message-id="{{ message.id }}">
+                                        <div class="message-bubble">
+                                            <div class="message-content">{{ message.content|nl2br }}</div>
+                                            <div class="message-time">
+                                                {{ message.createdAt|date('H:i') }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Formulaire d'envoi -->
+                    <div class="card-footer">
+                        <div id="message-form-container">
+                            {{ form_start(form, {'attr': {'id': 'message-form', 'class': 'row g-2'}}) }}
+                            <div class="col">
+                                {{ form_widget(form.content, {'attr': {'class': 'form-control', 'id': 'message-input', 'rows': '2'}}) }}
+                                {{ form_errors(form.content) }}
+                            </div>
+                            <div class="col-auto">
+                                <button type="submit" class="btn btn-primary" id="send-button">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                            </div>
+                            {{ form_end(form) }}
+                        </div>
+
+                        <div class="mt-2">
+                        <span id="typing-indicator" class="text-muted small" style="display: none;">
+                            <i class="fas fa-circle text-success"></i> En ligne
+                        </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Variables JavaScript -->
+    <script>
+        window.chatConfig = {
+            currentUserId: {{ current_user.id }},
+            otherUserId: {{ other_user.id }},
+            conversationTopic: 'chat/conversation/{{ min(current_user.id, other_user.id) }}-{{ max(current_user.id, other_user.id) }}',
+            mercureUrl: '{{ mercure_url|default('http://localhost:3000/.well-known/mercure') }}',
+            sendMessageUrl: '{{ path('chat_api_send') }}'
+        };
+    </script>
+{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .chat-container {
+            height: 80vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .messages-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            background-color: #f8f9fa;
+            max-height: 60vh;
+        }
+
+        .message-item {
+            margin-bottom: 1rem;
+            display: flex;
+        }
+
+        .message-item.sent {
+            justify-content: flex-end;
+        }
+
+        .message-item.received {
+            justify-content: flex-start;
+        }
+
+        .message-bubble {
+            max-width: 70%;
+            padding: 0.75rem 1rem;
+            border-radius: 1rem;
+            position: relative;
+        }
+
+        .message-item.sent .message-bubble {
+            background-color: #007bff;
+            color: white;
+            border-bottom-right-radius: 0.25rem;
+        }
+
+        .message-item.received .message-bubble {
+            background-color: white;
+            color: #333;
+            border: 1px solid #dee2e6;
+            border-bottom-left-radius: 0.25rem;
+        }
+
+        .message-content {
+            margin-bottom: 0.25rem;
+            word-wrap: break-word;
+        }
+
+        .message-time {
+            font-size: 0.75rem;
+            opacity: 0.7;
+        }
+
+        .message-item.sent .message-time {
+            text-align: right;
+        }
+
+        .message-item.received .message-time {
+            text-align: left;
+        }
+
+        #message-input {
+            resize: none;
+        }
+
+        #send-button {
+            height: 100%;
+            min-height: 60px;
+        }
+
+        .card-footer {
+            background-color: white;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Animation pour les nouveaux messages */
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message-item.new-message {
+            animation: slideIn 0.3s ease-out;
+        }
+
+        /* Scrollbar personnalisée */
+        .messages-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .messages-scroll::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .messages-scroll::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 3px;
+        }
+
+        .messages-scroll::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const messagesList = document.getElementById('messages-list');
+            const messagesContainer = document.getElementById('messages-container');
+            const messageForm = document.getElementById('message-form');
+            const messageInput = document.getElementById('message-input');
+            const sendButton = document.getElementById('send-button');
+
+            // Fonction pour faire défiler vers le bas
+            function scrollToBottom() {
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
+
+            // Défiler vers le bas au chargement
+            scrollToBottom();
+
+            // Fonction pour ajouter un message à l'interface
+            function addMessage(messageData) {
+                const messageElement = document.createElement('div');
+                const isSent = messageData.sender_id == window.chatConfig.currentUserId;
+
+                messageElement.className = `message-item ${isSent ? 'sent' : 'received'} new-message`;
+                messageElement.setAttribute('data-message-id', messageData.id);
+
+                messageElement.innerHTML = `
+                    <div class="message-bubble">
+                        <div class="message-content">${escapeHtml(messageData.content).replace(/\n/g, '<br>')}</div>
+                        <div class="message-time">
+                            ${new Date(messageData.created_at).toLocaleTimeString('fr-FR', {hour: '2-digit', minute: '2-digit'})}
+                        </div>
+                    </div>
+                `;
+
+                messagesList.appendChild(messageElement);
+                scrollToBottom();
+
+                // Retirer la classe d'animation après l'animation
+                setTimeout(() => {
+                    messageElement.classList.remove('new-message');
+                }, 300);
+            }
+
+            // Fonction pour échapper le HTML
+            function escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            // Gestion de l'envoi de message via AJAX
+            messageForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                const content = messageInput.value.trim();
+                if (!content) return;
+
+                // Désactiver le bouton d'envoi
+                sendButton.disabled = true;
+                messageInput.disabled = true;
+
+                fetch(window.chatConfig.sendMessageUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        content: content,
+                        receiver_id: window.chatConfig.otherUserId
+                    })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            messageInput.value = '';
+                            // Le message sera ajouté via Mercure
+                        } else {
+                            alert(data.error || 'Erreur lors de l\'envoi du message');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erreur:', error);
+                        alert('Erreur de connexion');
+                    })
+                    .finally(() => {
+                        // Réactiver le bouton d'envoi
+                        sendButton.disabled = false;
+                        messageInput.disabled = false;
+                        messageInput.focus();
+                    });
+            });
+
+            // Envoi avec Entrée (Shift+Entrée pour nouvelle ligne)
+            messageInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    messageForm.dispatchEvent(new Event('submit'));
+                }
+            });
+
+            // Configuration Mercure
+            const eventSource = new EventSource(
+                window.chatConfig.mercureUrl + '?topic=' + encodeURIComponent(window.chatConfig.conversationTopic)
+            );
+
+            eventSource.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+
+                if (data.type === 'new_message') {
+                    // Vérifier si le message n'existe pas déjà
+                    const existingMessage = document.querySelector(`[data-message-id="${data.message.id}"]`);
+                    if (!existingMessage) {
+                        addMessage(data.message);
+                    }
+                }
+            };
+
+            eventSource.onerror = function(event) {
+                console.error('Erreur EventSource:', event);
+            };
+
+            // Nettoyer EventSource à la fermeture de la page
+            window.addEventListener('beforeunload', function() {
+                eventSource.close();
+            });
+
+            // Focus sur le champ de saisie
+            messageInput.focus();
+        });
+    </script>
+{% endblock %}
