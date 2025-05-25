@@ -18,9 +18,10 @@
         {{ encore_entry_script_tags('search') }}
         {{ encore_entry_script_tags('likes') }}
         {{ encore_entry_script_tags('articles-datatable') }}
+        {{ encore_entry_script_tags('search-user') }}
     {% endblock %}
 </head>
-<body class="flex flex-col min-h-screen">
+<body class="flex flex-col min-h-screen" hx-ext="sse">
 <nav class="bg-gray-800 text-white">
     <div class="container mx-auto flex flex-col md:flex-row justify-between items-center">
         <div class="flex justify-between items-center w-full md:w-auto">
@@ -91,6 +92,10 @@
                                    class="block px-4 py-2 text-white hover:bg-gray-600">
                                     <i class="fas fa-user mr-2"></i> Profil
                                 </a>
+                                <a class="block px-4 py-2 text-white hover:bg-gray-600" href="{{ path('chat_index') }}">
+                                    <i class="bi bi-chat-fill mr-2"></i>
+                                    Chat
+                                </a>
                             </li>
                             <li class="border-t border-gray-600 mt-1 pt-1">
                                 <a href="{{ path('app_logout') }}" class="block px-4 py-2 text-white hover:bg-gray-600">
@@ -136,6 +141,7 @@
         </div>
     </div>
 </footer>
+
 <script>
 
     //closing message flash

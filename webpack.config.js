@@ -11,6 +11,7 @@ Encore
     .addEntry('search', './assets/js/search.js')
     .addEntry('likes', './assets/js/likes.js')
     .addEntry('articles-datatable', './assets/js/articles-datatable.js')
+    .addEntry('search-user', './assets/js/search-user.js')
     .enableStimulusBridge('./assets/controllers.json')
     .splitEntryChunks()
     .enableSingleRuntimeChunk()
