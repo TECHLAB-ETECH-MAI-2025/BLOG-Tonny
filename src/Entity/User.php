@@ -29,10 +29,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?string $password = null;
 
-    #[ORM\OneToMany(mappedBy: 'sender', targetEntity: Message::class, orphanRemoval: true)]
+    #[ORM\OneToMany(targetEntity: Message::class, mappedBy: 'sender', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $sentMessages;
 
-    #[ORM\OneToMany(mappedBy: 'receiver', targetEntity: Message::class, orphanRemoval: true)]
+    #[ORM\OneToMany(targetEntity: Message::class, mappedBy: 'receiver', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $receivedMessages;
 
     #[ORM\Column]

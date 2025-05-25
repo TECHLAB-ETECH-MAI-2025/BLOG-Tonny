@@ -7,15 +7,22 @@
         <!-- En-tête de la conversation -->
         <div class="bg-white border-b border-gray-200 p-4 flex items-center shadow-sm">
             <a href="{{ path('chat_index') }}" class="mr-2 text-gray-600">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                     stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
                 </svg>
             </a>
             <div class="flex-shrink-0 h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold">
                 {{ other_user.username|first|upper }}
             </div>
             <div class="ml-3">
-                <h2 class="text-lg font-medium text-gray-800">@{{ other_user.username }}</h2>
+                <h2 class="text-lg font-medium text-gray-800">{{ other_user.username }}</h2>
+                {% if other_user.isOnline() %}
+                    <p class="text-sm text-green-500">En ligne</p>
+                {% else %}
+                    <p class="text-sm text-gray-500">Hors ligne</p>
+                {% endif %}
             </div>
         </div>
 
@@ -29,7 +36,7 @@
                         ">
                             <div class="break-words">{{ message.content|nl2br }}</div>
                             <div class="text-xs mt-1 {% if message.sender.id == app.user.id %}text-blue-600{% else %}text-gray-600{% endif %}">
-                                {{ message.createdAt|date('y-m-d - H:i') }}
+                                {{ message.createdAt|format_datetime('medium','short') }}
                             </div>
                         </div>
                     </div>
@@ -45,7 +52,8 @@
                     'class': 'flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none transition-all',
                 }
             }) }}
-            <button type="submit" class="bg-gray-700  text-white rounded-lg px-4 py-2 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-zinc-500 transition-colors">
+            <button type="submit"
+                    class="bg-gray-700  text-white rounded-lg px-4 py-2 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-zinc-500 transition-colors">
                 <i class="bi bi-send-fill"></i>
             </button>
             {{ form_end(form) }}
@@ -55,7 +63,7 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <script>
-        $(document).ready(function() {
+        $(document).ready(function () {
             const messagesContainer = $('#messages-container');
             const messageForm = $('#message-form');
             const messageInput = $('#message_form_content');
@@ -71,10 +79,11 @@
             function scrollToBottom() {
                 messagesContainer.scrollTop(messagesContainer[0].scrollHeight);
             }
+
             scrollToBottom();
 
             // Gestion de l'envoi de message
-            messageForm.on('submit', function(e) {
+            messageForm.on('submit', function (e) {
                 e.preventDefault();
                 const content = messageInput.val().trim();
                 if (!content) return;
@@ -90,7 +99,7 @@
                         content: content,
                         receiver_id: otherUserId
                     }),
-                    success: function(data) {
+                    success: function (data) {
                         if (data.status === 'success') {
                             messageInput.val('');
                             messageInput.css('height', 'auto');
@@ -98,10 +107,10 @@
                             console.error('Erreur:', data.error);
                         }
                     },
-                    error: function(error) {
+                    error: function (error) {
                         console.error('Erreur:', error);
                     },
-                    complete: function() {
+                    complete: function () {
                         sendButton.prop('disabled', false);
                         messageInput.prop('disabled', false);
                         messageInput.focus();
@@ -112,7 +121,7 @@
             // Configuration Mercure pour les messages en temps réel
             const eventSource = new EventSource(mercureUrl + '?topic=' + encodeURIComponent(conversationTopic));
 
-            eventSource.onmessage = function(event) {
+            eventSource.onmessage = function (event) {
                 const data = JSON.parse(event.data);
                 if (data.type === 'new_message') {
                     const isSent = data.message.sender_id === currentUserId;
@@ -124,16 +133,24 @@
             function addMessage(messageData, isSent) {
                 const messagesList = $('#messages-list');
                 const messageElement = $('<div>').addClass(`flex mb-4 ${isSent ? 'justify-end' : 'justify-start'} animate-message`).html(`
-                    <div class="max-w-xs md:max-w-md rounded-lg px-4 py-2 ${isSent ? 'bg-blue-200 text-gray-800' : 'bg-gray-200 text-gray-800'}">
-                        <div class="break-words">${escapeHtml(messageData.content).replace(/\n/g, '<br>')}</div>
-                        <div class="text-xs mt-1 ${isSent ? 'text-blue-600' : 'text-gray-600'}">
-                            ${new Date(messageData.created_at).toLocaleTimeString('fr-FR', {hour: '2-digit', minute: '2-digit'})}
-                        </div>
+                <div class="max-w-xs md:max-w-md rounded-lg px-4 py-2 ${isSent ? 'bg-blue-200 text-gray-800' : 'bg-gray-200 text-gray-800'}">
+                    <div class="break-words">${escapeHtml(messageData.content).replace(/\n/g, '<br>')}</div>
+                    <div class="text-xs mt-1 ${isSent ? 'text-blue-600' : 'text-gray-600'}">
+                        ${new Date(messageData.created_at).toLocaleDateString('fr-FR', {
+                            day: 'numeric',
+                            month: 'long',
+                            year: 'numeric'
+                        })} - ${new Date(messageData.created_at).toLocaleTimeString('fr-FR', {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        })}
                     </div>
-                `);
+                </div>
+            `);
 
                 messagesList.append(messageElement);
             }
+
 
             function escapeHtml(text) {
                 const div = document.createElement('div');
@@ -142,13 +159,13 @@
             }
 
             // Auto-resize du textarea
-            messageInput.on('input', function() {
+            messageInput.on('input', function () {
                 $(this).css('height', 'auto');
                 $(this).css('height', this.scrollHeight + 'px');
             });
 
             // Gestion de la touche Entrée
-            messageInput.on('keydown', function(e) {
+            messageInput.on('keydown', function (e) {
                 if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
                     messageForm.trigger('submit');
@@ -156,7 +173,7 @@
             });
 
             // Fermer la connexion Mercure à la fermeture de la page
-            $(window).on('beforeunload', function() {
+            $(window).on('beforeunload', function () {
                 if (eventSource) eventSource.close();
             });
         });
@@ -186,8 +203,14 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
     </style>
 {% endblock %}
