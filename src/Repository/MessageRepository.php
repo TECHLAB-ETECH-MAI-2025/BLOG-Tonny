@@ -15,12 +15,8 @@ class MessageRepository extends ServiceEntityRepository
     }
 
     /**
-     * Récupère la conversation entre deux utilisateurs.
-     *
-     * @param User $user1 Premier utilisateur.
-     * @param User $user2 Deuxième utilisateur.
-     * @param int $limit Limite du nombre de messages à récupérer.
-     * @return array Tableau des messages de la conversation.
+     * Récupère la conversation entre deux utilisateurs (pour l'affichage initial).
+     * Retourne les messages dans l'ordre chronologique (ASC)
      */
     public function findConversation(User $user1, User $user2, int $limit = 50): array
     {
@@ -28,19 +24,26 @@ class MessageRepository extends ServiceEntityRepository
             ->where('(m.sender = :user1 AND m.receiver = :user2) OR (m.sender = :user2 AND m.receiver = :user1)')
             ->setParameter('user1', $user1)
             ->setParameter('user2', $user2)
-            ->orderBy('m.createdAt', 'ASC')
+            ->orderBy('m.createdAt', 'DESC')
+            ->setMaxResults($limit)
             ->getQuery()
             ->getResult();
     }
 
+    /**
+     * Récupère les messages paginés pour le chargement "load more"
+     * Retourne les messages dans l'ordre chronologique inverse pour la pagination
+     */
     public function findPaginatedConversation(User $currentUser, User $otherUser, int $page, int $limit): array
     {
+        $offset = ($page - 1) * $limit;
+
         return $this->createQueryBuilder('m')
             ->where('(m.sender = :currentUser AND m.receiver = :otherUser) OR (m.sender = :otherUser AND m.receiver = :currentUser)')
             ->setParameter('currentUser', $currentUser)
             ->setParameter('otherUser', $otherUser)
             ->orderBy('m.createdAt', 'DESC')
-            ->setFirstResult(($page - 1) * $limit)
+            ->setFirstResult($offset)
             ->setMaxResults($limit)
             ->getQuery()
             ->getResult();

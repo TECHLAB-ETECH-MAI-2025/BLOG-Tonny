@@ -205,7 +205,7 @@
             const mercureUrl = '{{ mercure_url|default('http://localhost:3000/.well-known/mercure') }}';
             const pageSize = 20;
 
-            // Gestion du scroll
+            // Gestion du scroll pour charger plus de messages
             $('#messages-container').on('scroll', function() {
                 const scrollTop = $(this).scrollTop();
                 if (scrollTop < 100 && !isLoading && hasMore) {
@@ -223,18 +223,26 @@
                 $.ajax({
                     url: `/chat/api/messages/${activeConversationUserId}?page=${currentPage}`,
                     success: function(response) {
-                        const prevHeight = $('#messages-list')[0].scrollHeight;
+                        // Sauvegarder la position de scroll actuelle
+                        const currentScrollHeight = $('#messages-list')[0].scrollHeight;
+                        const currentScrollTop = $('#messages-container').scrollTop();
 
-                        response.messages.reverse().forEach(message => {
+                        // Ajouter les nouveaux messages au début
+                        response.messages.forEach(message => {
                             prependMessage(message, message.sender_id === currentUserId);
                         });
 
-                        const newHeight = $('#messages-list')[0].scrollHeight;
-                        $('#messages-container').scrollTop(newHeight - prevHeight);
+                        // Calculer la nouvelle position de scroll pour maintenir la position
+                        const newScrollHeight = $('#messages-list')[0].scrollHeight;
+                        const heightDifference = newScrollHeight - currentScrollHeight;
+                        $('#messages-container').scrollTop(currentScrollTop + heightDifference);
 
                         hasMore = response.hasMore;
                     },
-                    complete: () => {
+                    error: function() {
+                        console.error('Erreur lors du chargement des messages');
+                    },
+                    complete: function() {
                         isLoading = false;
                         $('#loading-messages').addClass('hidden');
                     }
@@ -244,6 +252,11 @@
             function prependMessage(messageData, isSent) {
                 const messageHtml = createMessageHtml(messageData, isSent);
                 $('#messages-list').prepend(messageHtml);
+            }
+
+            function appendMessage(messageData, isSent) {
+                const messageHtml = createMessageHtml(messageData, isSent);
+                $('#messages-list').append(messageHtml);
             }
 
             function createMessageHtml(messageData, isSent) {
@@ -256,16 +269,16 @@
                 });
 
                 return `
-                    <div class="flex mb-4 ${isSent ? 'justify-end' : 'justify-start'} animate-message">
-                        <div class="max-w-xs md:max-w-md rounded-2xl px-4 py-3
-                            ${isSent ? 'bg-blue-500 text-white' : 'bg-white text-gray-800'} shadow-sm">
-                            <div class="break-words whitespace-pre-wrap">${escapeHtml(messageData.content)}</div>
-                            <div class="text-xs mt-1 ${isSent ? 'text-blue-100' : 'text-gray-500'}">
-                                ${date}
-                            </div>
-                        </div>
+            <div class="flex mb-4 ${isSent ? 'justify-end' : 'justify-start'} animate-message" data-message-id="${messageData.id}">
+                <div class="max-w-xs md:max-w-md rounded-2xl px-4 py-3
+                    ${isSent ? 'bg-blue-500 text-white' : 'bg-white text-gray-800'} shadow-sm">
+                    <div class="break-words whitespace-pre-wrap">${escapeHtml(messageData.content)}</div>
+                    <div class="text-xs mt-1 ${isSent ? 'text-blue-100' : 'text-gray-500'}">
+                        ${date}
                     </div>
-                `;
+                </div>
+            </div>
+        `;
             }
 
             // Gestion de la sélection de conversation
@@ -279,9 +292,11 @@
             function loadConversation(userId, username) {
                 if (activeConversationUserId === userId) return;
 
+                // Reset des variables de pagination
                 currentPage = 1;
                 hasMore = true;
                 activeConversationUserId = userId;
+
                 $('#no-conversation').hide();
                 $('#conversation-area').removeClass('hidden').addClass('flex');
                 updateConversationHeader(username);
@@ -291,15 +306,15 @@
 
             function updateConversationHeader(username) {
                 $('#conversation-header').html(`
-                    <div class="flex items-center">
-                        <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold">
-                            ${username.charAt(0).toUpperCase()}
-                        </div>
-                        <div class="ml-3">
-                            <h2 class="text-lg font-medium text-gray-800">${username}</h2>
-                        </div>
-                    </div>
-                `);
+            <div class="flex items-center">
+                <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold">
+                    ${username.charAt(0).toUpperCase()}
+                </div>
+                <div class="ml-3">
+                    <h2 class="text-lg font-medium text-gray-800">${username}</h2>
+                </div>
+            </div>
+        `);
             }
 
             function loadInitialMessages() {
@@ -309,18 +324,23 @@
                 $.ajax({
                     url: `/chat/api/messages/${activeConversationUserId}?page=1`,
                     success: function(response) {
-                        response.messages.forEach(message => {
+                        // Inverser l'ordre des messages pour affichage chronologique
+                        const messagesInOrder = response.messages.reverse();
+
+                        messagesInOrder.forEach(message => {
                             appendMessage(message, message.sender_id === currentUserId);
                         });
+
+                        hasMore = response.hasMore;
                         scrollToBottom();
                     },
-                    complete: () => $('#loading-messages').addClass('hidden')
+                    error: function() {
+                        console.error('Erreur lors du chargement initial des messages');
+                    },
+                    complete: function() {
+                        $('#loading-messages').addClass('hidden');
+                    }
                 });
-            }
-
-            function appendMessage(messageData, isSent) {
-                const messageHtml = createMessageHtml(messageData, isSent);
-                $('#messages-list').append(messageHtml);
             }
 
             function setupMercure(userId) {
@@ -329,17 +349,25 @@
                 const topic = `chat/conversation/${Math.min(currentUserId, userId)}-${Math.max(currentUserId, userId)}`;
                 eventSource = new EventSource(`${mercureUrl}?topic=${encodeURIComponent(topic)}`);
 
-                eventSource.onmessage = e => {
+                eventSource.onmessage = function(e) {
                     const data = JSON.parse(e.data);
                     if (data.type === 'message') {
-                        appendMessage(data.data, data.data.sender === currentUserId);
-                        scrollToBottom();
+                        // Vérifier que le message n'existe pas déjà
+                        if (!$(`[data-message-id="${data.data.id}"]`).length) {
+                            appendMessage(data.data, data.data.sender_id === currentUserId);
+                            scrollToBottom();
+                        }
                     }
+                };
+
+                eventSource.onerror = function() {
+                    console.error('Erreur de connexion Mercure');
                 };
             }
 
             function scrollToBottom() {
-                $('#messages-container').scrollTop($('#messages-list').height());
+                const container = $('#messages-container');
+                container.scrollTop(container[0].scrollHeight);
             }
 
             function escapeHtml(text) {
@@ -352,6 +380,9 @@
                 const content = $('#message-input').val().trim();
                 if (!content || !activeConversationUserId) return;
 
+                const sendButton = $('#send-button');
+                sendButton.prop('disabled', true);
+
                 $.ajax({
                     url: '{{ path('chat_api_send') }}',
                     method: 'POST',
@@ -360,7 +391,29 @@
                         content: content,
                         receiver_id: activeConversationUserId
                     }),
-                    success: () => $('#message-input').val('')
+                    success: function() {
+                        $('#message-input').val('');
+                    },
+                    error: function() {
+                        console.error('Erreur lors de l\'envoi du message');
+                    },
+                    complete: function() {
+                        sendButton.prop('disabled', false);
+                        $('#message-input').focus();
+                    }
+                });
+            });
+
+            // Recherche d'utilisateurs
+            $('#search-input-user').on('input', function() {
+                const searchTerm = $(this).val().toLowerCase();
+                $('.conversation-item').each(function() {
+                    const username = $(this).data('username').toLowerCase();
+                    if (username.includes(searchTerm)) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
                 });
             });
         });
