@@ -28,7 +28,7 @@ class MessagesService
                     'content' => $message->getContent(),
                     'sender' => $message->getSender()->getId(),
                     'receiver' => $message->getReceiver()->getId(),
-                    'timestamp' => $message->getCreatedAt()->format('c')
+                    'created_at' => $message->getCreatedAt()->format('c')
                 ]
             ])
         );
