@@ -7,16 +7,8 @@ use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
-/**
- * Dépôt pour gérer les entités Message.
- */
 class MessageRepository extends ServiceEntityRepository
 {
-    /**
-     * Constructeur du dépôt de messages.
-     *
-     * @param ManagerRegistry $registry Registre du gestionnaire d'entités.
-     */
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Message::class);
@@ -37,18 +29,34 @@ class MessageRepository extends ServiceEntityRepository
             ->setParameter('user1', $user1)
             ->setParameter('user2', $user2)
             ->orderBy('m.createdAt', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function findPaginatedConversation(User $currentUser, User $otherUser, int $page, int $limit): array
+    {
+        return $this->createQueryBuilder('m')
+            ->where('(m.sender = :currentUser AND m.receiver = :otherUser) OR (m.sender = :otherUser AND m.receiver = :currentUser)')
+            ->setParameter('currentUser', $currentUser)
+            ->setParameter('otherUser', $otherUser)
+            ->orderBy('m.createdAt', 'DESC')
+            ->setFirstResult(($page - 1) * $limit)
             ->setMaxResults($limit)
             ->getQuery()
             ->getResult();
     }
 
-    /**
-     * Récupère le dernier message échangé entre deux utilisateurs.
-     *
-     * @param User $user1 Premier utilisateur.
-     * @param User $user2 Deuxième utilisateur.
-     * @return Message|null Le dernier message ou null s'il n'y en a pas.
-     */
+    public function countConversationMessages(User $currentUser, User $otherUser): int
+    {
+        return $this->createQueryBuilder('m')
+            ->select('COUNT(m.id)')
+            ->where('(m.sender = :currentUser AND m.receiver = :otherUser) OR (m.sender = :otherUser AND m.receiver = :currentUser)')
+            ->setParameter('currentUser', $currentUser)
+            ->setParameter('otherUser', $otherUser)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
     public function findLastMessageBetweenUsers(User $user1, User $user2): ?Message
     {
         return $this->createQueryBuilder('m')

@@ -12,6 +12,7 @@ Encore
     .addEntry('likes', './assets/js/likes.js')
     .addEntry('articles-datatable', './assets/js/articles-datatable.js')
     .addEntry('search-user', './assets/js/search-user.js')
+    .addEntry('messages-notification','./assets/js/toast-notifications.js')
     .enableStimulusBridge('./assets/controllers.json')
     .splitEntryChunks()
     .enableSingleRuntimeChunk()
