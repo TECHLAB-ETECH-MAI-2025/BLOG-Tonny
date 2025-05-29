@@ -1,0 +1,439 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Chat - Messages{% endblock %}
+
+{% block body %}
+    {# Conteneur principal du chat #}
+    <div class="flex h-[800px] bg-gray-50">
+        {# Colonne de gauche - Liste des conversations #}
+        <div class="w-1/3 bg-white border-r border-gray-200 flex flex-col">
+            {# En-tête avec barre de recherche #}
+            <div class="bg-white border-b border-gray-200 p-4">
+                <h1 class="text-xl font-semibold text-gray-800">Messages</h1>
+                <div class="relative mt-2">
+                    <input type="text" id="search-input-user" placeholder="Rechercher utilisateurs..."
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                    <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                        <svg class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            {# Liste des conversations #}
+            <div class="flex-1 overflow-y-auto" id="conversations-list">
+                {% if usersWithLastMessage is empty %}
+                    {# Aucune conversation disponible #}
+                    <div class="p-4 text-center text-gray-500">
+                        <svg class="mx-auto h-12 w-12 text-gray-300 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                        </svg>
+                        <p class="text-sm">Aucune conversation</p>
+                    </div>
+                {% else %}
+                    {# Liste des utilisateurs avec qui converser #}
+                    {% for userData in usersWithLastMessage %}
+                        {% set user = userData.user %}
+                        {% set lastMessage = userData.lastMessage %}
+                        <div class="conversation-item cursor-pointer border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                             data-user-id="{{ user.id }}" data-username="{{ user.username }}">
+                            <div class="flex items-center p-4">
+                                {# Avatar et indicateur de présence #}
+                                <div class="flex-shrink-0 relative">
+                                    <div class="flex-shrink-0 h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold">
+                                        {{ user.username|first|upper }}
+                                    </div>
+                                    {% if user.isOnline() %}
+                                        <div class="absolute -bottom-1 -right-1 h-4 w-4 bg-green-400 border-2 border-white rounded-full"></div>
+                                    {% else %}
+                                        <div class="absolute -bottom-1 -right-1 h-4 w-4 bg-red-400 border-2 border-white rounded-full"></div>
+                                    {% endif %}
+                                </div>
+
+                                {# Détails de la conversation #}
+                                <div class="ml-3 flex-1 min-w-0">
+                                    <div class="flex justify-between items-center mb-1">
+                                        <p class="text-sm font-medium text-gray-900 truncate">{{ user.username }}</p>
+                                        {% if lastMessage %}
+                                            <span class="text-xs text-gray-500">
+                                                {% if lastMessage.createdAt|date('Y-m-d') == 'now'|date('Y-m-d') %}
+                                                    {{ lastMessage.createdAt|format_datetime('none','short',locale='fr') }}
+                                                {% else %}
+                                                    {{ lastMessage.createdAt|format_datetime('none','short') }}
+                                                {% endif %}
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                    {% if lastMessage %}
+                                        <p class="text-sm text-gray-500 truncate">
+                                            {% if lastMessage.sender.id == app.user.id %}
+                                                <span class="text-gray-400">Vous: </span>
+                                            {% endif %}
+                                            {{ lastMessage.content|u.truncate(35, '...') }}
+                                        </p>
+                                    {% else %}
+                                        <p class="text-sm text-gray-400 italic">Commencer une conversation</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+
+        {# Zone de conversation principale #}
+        <div class="flex-1 flex flex-col" id="chat-area">
+            {# Vue par défaut quand aucune conversation n'est sélectionnée #}
+            <div class="flex-1 flex items-center justify-center bg-gray-50" id="no-conversation">
+                <div class="text-center">
+                    <svg class="mx-auto h-16 w-16 text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                    </svg>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">Sélectionnez une conversation</h3>
+                    <p class="text-gray-500">Choisissez un utilisateur dans la liste pour commencer à chatter</p>
+                </div>
+            </div>
+
+            {# Zone de conversation (cachée par défaut) #}
+            <div class="flex-1 flex-col overflow-scroll hidden" id="conversation-area">
+                {# En-tête de la conversation #}
+                <div class="bg-white border-b border-gray-200 p-4 flex items-center shadow-sm" id="conversation-header">
+                </div>
+
+                {# Conteneur des messages #}
+                <div class="flex-1 overflow-y-auto p-4 bg-gray-50" id="messages-container">
+                    <div id="messages-list">
+                    </div>
+                    {# Indicateur de chargement #}
+                    <div class="text-center py-4 hidden" id="loading-messages">
+                        <div class="inline-flex items-center">
+                            <div class="animate-spin h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full mr-2"></div>
+                            <span class="text-gray-500 text-sm">Chargement des messages...</span>
+                        </div>
+                    </div>
+                </div>
+
+                {# Formulaire d'envoi de message #}
+                <div class="bg-white border-t border-gray-200 p-4 shadow-inner" id="message-form-container">
+                    <form id="message-form" class="flex space-x-3">
+                        <div class="flex-1 relative">
+                            <input id="message-input"
+                                      placeholder="Tapez votre message..."
+                                      class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none transition-all text-sm"
+                                      style="min-height: 44px; max-height: 120px;"/>
+                        </div>
+                        <button type="submit"
+                                class="bg-gray-600 text-white rounded-lg px-6 py-3 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center"
+                                id="send-button">
+                            <i class="bi bi-send"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        #conversations-list, #messages-container {
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e0 #f7fafc;
+        }
+
+        #conversations-list::-webkit-scrollbar, #messages-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #conversations-list::-webkit-scrollbar-track, #messages-container::-webkit-scrollbar-track {
+            background: #f7fafc;
+        }
+
+        #conversations-list::-webkit-scrollbar-thumb, #messages-container::-webkit-scrollbar-thumb {
+            background-color: #cbd5e0;
+            border-radius: 3px;
+        }
+
+        .animate-message {
+            animation: fadeInUp 0.3s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .conversation-item.active {
+            background-color: #eff6ff;
+            border-right: 3px solid #3b82f6;
+        }
+
+        @media (max-width: 768px) {
+            .flex {
+                flex-direction: column;
+            }
+
+            .w-1/3 {
+            width: 100%;
+            height: 40vh;
+        }
+
+            .flex-1 {
+                height: 60vh;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        $(document).ready(function() {
+            // Variables globales
+            let currentUserId = {{ app.user.id }};
+            let activeConversationUserId = null;
+            let eventSource = null;
+            const mercureUrl = '{{ mercure_url|default('http://localhost:3000/.well-known/mercure') }}';
+
+            // Sélection des éléments DOM
+            const $conversationsList = $('#conversations-list');
+            const $noConversation = $('#no-conversation');
+            const $conversationArea = $('#conversation-area');
+            const $conversationHeader = $('#conversation-header');
+            const $messagesContainer = $('#messages-container');
+            const $messagesList = $('#messages-list');
+            const $messageForm = $('#message-form');
+            const $messageInput = $('#message-input');
+            const $sendButton = $('#send-button');
+            const $loadingMessages = $('#loading-messages');
+
+            /**
+             * Gère le clic sur une conversation dans la liste
+             */
+            $conversationsList.on('click', '.conversation-item', function() {
+                const userId = $(this).data('user-id');
+                const username = $(this).data('username');
+                loadConversation(userId, username);
+
+                // Marque la conversation comme active
+                $('.conversation-item').removeClass('active');
+                $(this).addClass('active');
+            });
+
+            /**
+             * Charge une conversation avec un utilisateur spécifique
+             * @param {number} userId - ID de l'utilisateur avec qui converser
+             * @param {string} username - Nom d'utilisateur pour l'affichage
+             */
+            function loadConversation(userId, username) {
+                if (activeConversationUserId === userId) return;
+
+                // Ferme l'ancienne connexion Mercure
+                if (eventSource) {
+                    eventSource.close();
+                }
+
+                activeConversationUserId = userId;
+
+                // Affiche la zone de conversation
+                $noConversation.hide();
+                $conversationArea.removeClass('hidden').addClass('flex');
+
+                // Met à jour l'en-tête et charge les messages
+                updateConversationHeader(userId, username);
+                loadMessages(userId);
+
+                // Configure Mercure pour les messages en temps réel
+                setupMercure(userId);
+            }
+
+            /**
+             * Met à jour l'en-tête de la conversation avec les infos de l'utilisateur
+             */
+            function updateConversationHeader(userId, username) {
+                const headerHtml = `
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0 h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold">
+                            ${username.charAt(0).toUpperCase()}
+                        </div>
+                        <div class="ml-3">
+                            <h2 class="text-lg font-medium text-gray-800">${username}</h2>
+                        </div>
+                    </div>
+                `;
+                $conversationHeader.html(headerHtml);
+            }
+
+            /**
+             * Charge les messages d'une conversation via API
+             */
+            function loadMessages(userId) {
+                $loadingMessages.removeClass('hidden');
+                $messagesList.empty();
+
+                $.ajax({
+                    url: `/chat/api/messages/${userId}`,
+                    method: 'GET',
+                    success: function(messages) {
+                        $loadingMessages.addClass('hidden');
+                        messages.forEach(function(message) {
+                            addMessage(message, message.sender_id === currentUserId);
+                        });
+                        scrollToBottom();
+                    },
+                    error: function(error) {
+                        $loadingMessages.addClass('hidden');
+                        console.error('Erreur lors du chargement des messages:', error);
+                    }
+                });
+            }
+
+            /**
+             * Ajoute un message à la liste des messages
+             * @param {object} messageData - Données du message
+             * @param {boolean} isSent - True si le message est envoyé par l'utilisateur courant
+             */
+            function addMessage(messageData, isSent) {
+                const messageDate = new Date(messageData.created_at);
+
+                const months = [
+                    'janvier', 'février', 'mars', 'avril', 'mai', 'juin',
+                    'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'
+                ];
+
+                const day = messageDate.getDate();
+                const month = months[messageDate.getMonth()];
+                const year = messageDate.getFullYear();
+                const time = messageDate.toLocaleTimeString('fr-FR', {hour: '2-digit', minute: '2-digit'});
+
+                const formattedDate = `${day} ${month} ${year} - ${time}`;
+
+                const messageHtml = `
+                    <div class="flex mb-4 ${isSent ? 'justify-end' : 'justify-start'} animate-message">
+                        <div class="max-w-xs md:max-w-md rounded-2xl px-4 py-3 ${isSent ? 'bg-blue-500 text-white' : 'bg-white text-gray-800'} shadow-sm">
+                            <div class="break-words whitespace-pre-wrap">${escapeHtml(messageData.content)}</div>
+                            <div class="text-xs mt-1 ${isSent ? 'text-blue-100' : 'text-gray-500'}">
+                                ${formattedDate}
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                $messagesList.append(messageHtml);
+            }
+
+            /**
+             * Configure Mercure pour recevoir les messages en temps réel
+             */
+            function setupMercure(otherUserId) {
+                const conversationTopic = 'chat/conversation/' +
+                    Math.min(currentUserId, otherUserId) + '-' +
+                    Math.max(currentUserId, otherUserId);
+
+                eventSource = new EventSource(mercureUrl + '?topic=' + encodeURIComponent(conversationTopic));
+
+                eventSource.onmessage = function(event) {
+                    const data = JSON.parse(event.data);
+                    if (data.type === 'new_message') {
+                        const isSent = data.message.sender_id === currentUserId;
+                        addMessage(data.message, isSent);
+                        scrollToBottom();
+                        updateConversationsList();
+                    }
+                };
+
+                eventSource.onerror = function(error) {
+                    console.error('Erreur Mercure:', error);
+                };
+            }
+
+            /**
+             * Gère l'envoi d'un nouveau message
+             */
+            $messageForm.on('submit', function(e) {
+                e.preventDefault();
+                if (!activeConversationUserId) return;
+
+                const content = $messageInput.val().trim();
+                if (!content) return;
+
+                $sendButton.prop('disabled', true);
+                $messageInput.prop('disabled', true);
+
+                $.ajax({
+                    url: '{{ path('chat_api_send') }}',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        content: content,
+                        receiver_id: activeConversationUserId
+                    }),
+                    success: function(data) {
+                        if (data.status === 'success') {
+                            $messageInput.val('');
+                            autoResizeTextarea();
+                        }
+                    },
+                    error: function(error) {
+                        console.error('Erreur:', error);
+                    },
+                    complete: function() {
+                        $sendButton.prop('disabled', false);
+                        $messageInput.prop('disabled', false);
+                        $messageInput.focus();
+                    }
+                });
+            });
+
+            $messageInput.on('input', autoResizeTextarea);
+
+            /**
+             * Ajuste automatiquement la hauteur du textarea
+             */
+            function autoResizeTextarea() {
+                const textarea = $messageInput[0];
+                textarea.style.height = 'auto';
+                textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+            }
+
+            $messageInput.on('keydown', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    $messageForm.trigger('submit');
+                }
+            });
+
+            /**
+             * Fait défiler la conversation vers le bas
+             */
+            function scrollToBottom() {
+                $messagesContainer.scrollTop($messagesContainer[0].scrollHeight);
+            }
+
+            /**
+             * Échappe le HTML pour prévenir les attaques XSS
+             */
+            function escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            // Nettoie la connexion Mercure à la fermeture de la page
+            $(window).on('beforeunload', function() {
+                if (eventSource) {
+                    eventSource.close();
+                }
+            });
+        });
+    </script>
+{% endblock %}

@@ -56,6 +56,7 @@ final class HomeController extends AbstractController
         $user->setEmail('admin@admin.test')
              ->setUsername('admin')
              ->setPassword($hasher->hashPassword($user, '0000'))
+            ->setCreatedAt(new \DateTimeImmutable())
              ->setRoles(['ROLE_ADMIN']);
 
         $em->persist($user);
@@ -81,6 +82,7 @@ final class HomeController extends AbstractController
             $user->setEmail('user@blog.test')
                  ->setUsername('testuser')
                  ->setPassword($hasher->hashPassword($user, '1234'))
+                 ->setCreatedAt(new \DateTimeImmutable())
                  ->setRoles(['ROLE_USER']);
 
             $em->persist($user);

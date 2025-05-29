@@ -6,16 +6,10 @@ use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
-use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
-use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
-#[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_USERNAME', fields: ['username'])]
-#[UniqueEntity(fields: ['username'], message: 'There is already an account with this username')]
-#[UniqueEntity(fields: ['email'], message: 'There is already an account with this mail')]
-
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
@@ -23,42 +17,36 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(length: 180)]
-    #[Assert\NotBlank]
-    #[Assert\Length(min: 3, max: 255)]
+    #[ORM\Column(length: 180, unique: true)]
     private ?string $username = null;
 
-    /**
-     * @var list<string> The user roles
-     */
+    #[ORM\Column(length: 255)]
+    private ?string $email = null;
+
     #[ORM\Column]
     private array $roles = [];
 
-    /**
-     * @var string The hashed password
-     */
     #[ORM\Column]
-    #[Assert\Length(min: 8, max: 255)]
-    #[Assert\PasswordStrength([
-        'minScore' => Assert\PasswordStrength::STRENGTH_MEDIUM,
-        'message' => 'The password does not meet the required strength criteria.'
-    ])]
     private ?string $password = null;
 
-    #[ORM\Column(length: 255)]
-    #[Assert\NotBlank()]
-    #[Assert\Email()]
-    private ?string $email = null;
+    #[ORM\OneToMany(targetEntity: Message::class, mappedBy: 'sender', cascade: ['persist', 'remove'], orphanRemoval: true)]
+    private Collection $sentMessages;
 
-    /**
-     * @var Collection<int, Like>
-     */
-    #[ORM\OneToMany(targetEntity: Like::class, mappedBy: 'user', cascade: ['persist', 'remove'], orphanRemoval: true)]
-    private Collection $likes;
+    #[ORM\OneToMany(targetEntity: Message::class, mappedBy: 'receiver', cascade: ['persist', 'remove'], orphanRemoval: true)]
+    private Collection $receivedMessages;
+
+    #[ORM\Column]
+    private ?\DateTimeImmutable $createdAt = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $lastActivity = null;
 
     public function __construct()
     {
-        $this->likes = new ArrayCollection();
+        $this->sentMessages = new ArrayCollection();
+        $this->receivedMessages = new ArrayCollection();
+        $this->createdAt = new \DateTimeImmutable();
+        $this->lastActivity = new \DateTimeImmutable();
     }
 
     public function getId(): ?int
@@ -74,6 +62,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setUsername(string $username): static
     {
         $this->username = $username;
+
+        return $this;
+    }
+
+    public function getEmail(): ?string
+    {
+        return $this->email;
+    }
+
+    public function setEmail(string $email): static
+    {
+        $this->email = $email;
 
         return $this;
     }
@@ -100,9 +100,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return array_unique($roles);
     }
 
-    /**
-     * @param list<string> $roles
-     */
     public function setRoles(array $roles): static
     {
         $this->roles = $roles;
@@ -113,7 +110,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     /**
      * @see PasswordAuthenticatedUserInterface
      */
-    public function getPassword(): ?string
+    public function getPassword(): string
     {
         return $this->password;
     }
@@ -134,45 +131,105 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         // $this->plainPassword = null;
     }
 
-    public function getEmail(): ?string
+    /**
+     * @return Collection<int, Message>
+     */
+    public function getSentMessages(): Collection
     {
-        return $this->email;
+        return $this->sentMessages;
     }
 
-    public function setEmail(string $email): static
+    public function addSentMessage(Message $sentMessage): static
     {
-        $this->email = $email;
+        if (!$this->sentMessages->contains($sentMessage)) {
+            $this->sentMessages->add($sentMessage);
+            $sentMessage->setSender($this);
+        }
+
+        return $this;
+    }
+
+    public function removeSentMessage(Message $sentMessage): static
+    {
+        if ($this->sentMessages->removeElement($sentMessage)) {
+            // set the owning side to null (unless already changed)
+            if ($sentMessage->getSender() === $this) {
+                $sentMessage->setSender(null);
+            }
+        }
 
         return $this;
     }
 
     /**
-     * @return Collection<int, Like>
+     * @return Collection<int, Message>
      */
-    public function getLikes(): Collection
+    public function getReceivedMessages(): Collection
     {
-        return $this->likes;
+        return $this->receivedMessages;
     }
 
-    public function addLike(Like $like): static
+    public function addReceivedMessage(Message $receivedMessage): static
     {
-        if (!$this->likes->contains($like)) {
-            $this->likes->add($like);
-            $like->setUser($this);
+        if (!$this->receivedMessages->contains($receivedMessage)) {
+            $this->receivedMessages->add($receivedMessage);
+            $receivedMessage->setReceiver($this);
         }
 
         return $this;
     }
 
-    public function removeLike(Like $like): static
+    public function removeReceivedMessage(Message $receivedMessage): static
     {
-        if ($this->likes->removeElement($like)) {
+        if ($this->receivedMessages->removeElement($receivedMessage)) {
             // set the owning side to null (unless already changed)
-            if ($like->getUser() === $this) {
-                $like->setUser(null);
+            if ($receivedMessage->getReceiver() === $this) {
+                $receivedMessage->setReceiver(null);
             }
         }
 
         return $this;
+    }
+
+    public function getCreatedAt(): ?\DateTimeImmutable
+    {
+        return $this->createdAt;
+    }
+
+    public function setCreatedAt(\DateTimeImmutable $createdAt): static
+    {
+        $this->createdAt = $createdAt;
+
+        return $this;
+    }
+
+    public function getLastActivity(): ?\DateTimeImmutable
+    {
+        return $this->lastActivity;
+    }
+
+    public function setLastActivity(?\DateTimeImmutable $lastActivity): static
+    {
+        $this->lastActivity = $lastActivity;
+
+        return $this;
+    }
+
+    /**
+     * Vérifie si l'utilisateur est en ligne (actif dans les 5 dernières minutes)
+     */
+    public function isOnline(): bool
+    {
+        if (!$this->lastActivity) {
+            return false;
+        }
+
+        $fiveMinutesAgo = new \DateTimeImmutable('-5 minutes');
+        return $this->lastActivity > $fiveMinutesAgo;
+    }
+
+    public function __toString(): string
+    {
+        return $this->username ?? '';
     }
 }
