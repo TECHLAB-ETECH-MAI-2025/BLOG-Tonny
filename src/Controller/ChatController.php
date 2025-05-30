@@ -7,19 +7,17 @@ use App\Entity\User;
 use App\Form\MessageForm;
 use App\Repository\MessageRepository;
 use App\Repository\UserRepository;
+use App\Service\MessagesService;
+use App\Service\NotificationService;
 use Doctrine\ORM\EntityManagerInterface;
+use Exception;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Mercure\HubInterface;
-use Symfony\Component\Mercure\Update;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
-/**
- * Contrôleur pour gérer les fonctionnalités de chat.
- */
 #[Route('/chat')]
 #[IsGranted('ROLE_USER')]
 class ChatController extends AbstractController
@@ -28,29 +26,35 @@ class ChatController extends AbstractController
         private EntityManagerInterface $entityManager,
         private MessageRepository $messageRepository,
         private UserRepository $userRepository,
-        private HubInterface $hub,
+        private NotificationService $notificationService,
+        private MessagesService $messagesService,
     ) {}
 
     /**
      * Affiche la liste des utilisateurs avec lesquels l'utilisateur actuel peut chatter.
      *
      * @return Response Réponse HTTP avec le rendu de la liste des utilisateurs.
+     * @throws Exception
      */
     #[Route('/', name: 'chat_index')]
     public function index(): Response
     {
         /** @var User $currentUser */
         $currentUser = $this->getUser();
-
         $users = $this->userRepository->findAllExcept($currentUser);
 
         $usersWithLastMessage = array_map(function ($user) use ($currentUser) {
-            $lastMessage = $this->messageRepository->findLastMessageBetweenUsers($currentUser, $user);
             return [
                 'user' => $user,
-                'lastMessage' => $lastMessage
+                'lastMessage' => $this->messageRepository->findLastMessageBetweenUsers($currentUser, $user)
             ];
         }, $users);
+
+        usort($usersWithLastMessage, function ($a, $b) {
+            $aDate = $a['lastMessage']?->getCreatedAt();
+            $bDate = $b['lastMessage']?->getCreatedAt();
+            return ($bDate ?? new \DateTimeImmutable('1970-01-01')) <=> ($aDate ?? new \DateTimeImmutable('1970-01-01'));
+        });
 
         return $this->render('chat/index.html.twig', [
             'usersWithLastMessage' => $usersWithLastMessage,
@@ -75,29 +79,26 @@ class ChatController extends AbstractController
             throw $this->createAccessDeniedException('Vous ne pouvez pas chatter avec vous-même.');
         }
 
-        // Récupérer la conversation existante
-        $messages = $this->messageRepository->findConversation($currentUser, $user);
-
         $message = new Message();
         $form = $this->createForm(MessageForm::class, $message);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $message->setSender($currentUser);
-            $message->setReceiver($user);
-            $message->setCreatedAt(new \DateTimeImmutable());
+            $message->setSender($currentUser)
+                ->setReceiver($user)
+                ->setCreatedAt(new \DateTimeImmutable());
 
             $this->entityManager->persist($message);
             $this->entityManager->flush();
 
-            // Publier via Mercure
-            $this->publishMessage($message);
+            $this->messagesService->publishMessage($message);
+            $this->notificationService->sendMessageNotification($message);
 
             return $this->redirectToRoute('chat_conversation', ['id' => $user->getId()]);
         }
 
         return $this->render('chat/conversation.html.twig', [
-            'messages' => $messages,
+            'messages' => $this->messageRepository->findConversation($currentUser, $user),
             'other_user' => $user,
             'current_user' => $currentUser,
             'form' => $form->createView(),
@@ -113,9 +114,7 @@ class ChatController extends AbstractController
     #[Route('/api/send', name: 'chat_api_send', methods: ['POST'])]
     public function sendMessage(Request $request): JsonResponse
     {
-        /** @var User $currentUser */
         $currentUser = $this->getUser();
-
         $data = json_decode($request->getContent(), true);
 
         if (!isset($data['content']) || !isset($data['receiver_id'])) {
@@ -123,102 +122,62 @@ class ChatController extends AbstractController
         }
 
         $receiver = $this->userRepository->find($data['receiver_id']);
-        if (!$receiver) {
-            return new JsonResponse(['error' => 'Destinataire introuvable'], 404);
+        if (!$receiver || $receiver === $currentUser) {
+            return new JsonResponse(['error' => 'Destinataire invalide'], 400);
         }
 
-        if ($receiver === $currentUser) {
-            return new JsonResponse(['error' => 'Vous ne pouvez pas vous envoyer un message'], 400);
-        }
-
-        $content = trim($data['content']);
-        if (empty($content)) {
-            return new JsonResponse(['error' => 'Le message ne peut pas être vide'], 400);
-        }
-
-        $message = new Message();
-        $message->setSender($currentUser);
-        $message->setReceiver($receiver);
-        $message->setContent($content);
-        $message->setCreatedAt(new \DateTimeImmutable());
+        $message = (new Message())
+            ->setSender($currentUser)
+            ->setReceiver($receiver)
+            ->setContent(trim($data['content']))
+            ->setCreatedAt(new \DateTimeImmutable());
 
         $this->entityManager->persist($message);
         $this->entityManager->flush();
 
-        // Publier via Mercure
-        $this->publishMessage($message);
+        $this->messagesService->publishMessage($message);
+        $this->notificationService->sendMessageNotification($message);
 
         return new JsonResponse([
             'status' => 'success',
             'message' => [
                 'id' => $message->getId(),
                 'content' => $message->getContent(),
-                'sender_id' => $message->getSender()->getId(),
-                'receiver_id' => $message->getReceiver()->getId(),
+                'sender_id' => $currentUser->getId(),
+                'receiver_id' => $receiver->getId(),
                 'created_at' => $message->getCreatedAt()->format('c')
             ]
         ]);
     }
 
-    /**
-     * Récupère les messages d'une conversation via l'API.
-     *
-     * @param User $user L'utilisateur avec lequel récupérer les messages.
-     * @return JsonResponse Réponse JSON avec les messages de la conversation.
-     */
-    #[Route('/api/messages/{id}', name: 'chat_api_messages')]
-    public function getMessages(User $user): JsonResponse
+    #[Route('/api/messages/{id}', name: 'chat_api_messages', methods: ['GET'])]
+    public function getMessages(User $user, Request $request): JsonResponse
     {
         /** @var User $currentUser */
         $currentUser = $this->getUser();
+        $page = $request->query->getInt('page', 1);
+        $limit = 20;
 
-        $messages = $this->messageRepository->findConversation($currentUser, $user);
-
-        $messagesData = array_map(function (Message $message) {
-            return [
-                'id' => $message->getId(),
-                'content' => $message->getContent(),
-                'sender_id' => $message->getSender()->getId(),
-                'sender_name' => $message->getSender()->getUsername(),
-                'receiver_id' => $message->getReceiver()->getId(),
-                'created_at' => $message->getCreatedAt()->format('c')
-            ];
-        }, $messages);
-
-        return new JsonResponse($messagesData);
-    }
-
-    /**
-     * Publie un message via Mercure.
-     *
-     * @param Message $message Le message à publier.
-     */
-    private function publishMessage(Message $message): void
-    {
-        $messageData = [
-            'id' => $message->getId(),
-            'content' => $message->getContent(),
-            'sender_id' => $message->getSender()->getId(),
-            'sender_name' => $message->getSender()->getUsername(),
-            'receiver_id' => $message->getReceiver()->getId(),
-            'created_at' => $message->getCreatedAt()->format('c')
-        ];
-
-        // Topic pour la conversation spécifique
-        $conversationTopic = sprintf(
-            'chat/conversation/%d-%d',
-            min($message->getSender()->getId(), $message->getReceiver()->getId()),
-            max($message->getSender()->getId(), $message->getReceiver()->getId())
+        $messages = $this->messageRepository->findPaginatedConversation(
+            $currentUser,
+            $user,
+            $page,
+            $limit
         );
 
-        $update = new Update(
-            $conversationTopic,
-            json_encode([
-                'type' => 'new_message',
-                'message' => $messageData
-            ])
-        );
+        $totalMessages = $this->messageRepository->countConversationMessages($currentUser, $user);
 
-        $this->hub->publish($update);
+        return new JsonResponse([
+            'messages' => array_map(fn(Message $m) => [
+                'id' => $m->getId(),
+                'content' => $m->getContent(),
+                'sender_id' => $m->getSender()->getId(),
+                'sender_name' => $m->getSender()->getUsername(),
+                'receiver_id' => $m->getReceiver()->getId(),
+                'created_at' => $m->getCreatedAt()->format('c')
+            ], $messages),
+            'hasMore' => ($page * $limit) < $totalMessages,
+            'currentPage' => $page
+        ]);
     }
 }
