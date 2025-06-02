@@ -3,7 +3,6 @@
 {% block title %}Chat - Messages{% endblock %}
 
 {% block body %}
-    {# Conteneur principal du chat #}
     <div class="flex h-[800px] bg-gray-50">
         {# Colonne de gauche - Liste des conversations #}
         <div class="w-1/3 bg-white border-r border-gray-200 flex flex-col">
@@ -24,7 +23,6 @@
             {# Liste des conversations #}
             <div class="flex-1 overflow-y-auto" id="conversations-list">
                 {% if usersWithLastMessage is empty %}
-                    {# Aucune conversation disponible #}
                     <div class="p-4 text-center text-gray-500">
                         <svg class="mx-auto h-12 w-12 text-gray-300 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
@@ -32,14 +30,12 @@
                         <p class="text-sm">Aucune conversation</p>
                     </div>
                 {% else %}
-                    {# Liste des utilisateurs avec qui converser #}
                     {% for userData in usersWithLastMessage %}
                         {% set user = userData.user %}
                         {% set lastMessage = userData.lastMessage %}
                         <div class="conversation-item cursor-pointer border-b border-gray-100 hover:bg-gray-50 transition-colors"
                              data-user-id="{{ user.id }}" data-username="{{ user.username }}">
                             <div class="flex items-center p-4">
-                                {# Avatar et indicateur de présence #}
                                 <div class="flex-shrink-0 relative">
                                     <div class="flex-shrink-0 h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold">
                                         {{ user.username|first|upper }}
@@ -51,7 +47,6 @@
                                     {% endif %}
                                 </div>
 
-                                {# Détails de la conversation #}
                                 <div class="ml-3 flex-1 min-w-0">
                                     <div class="flex justify-between items-center mb-1">
                                         <p class="text-sm font-medium text-gray-900 truncate">{{ user.username }}</p>
@@ -76,6 +71,10 @@
                                         <p class="text-sm text-gray-400 italic">Commencer une conversation</p>
                                     {% endif %}
                                 </div>
+
+                                <div class="notification-badge hidden ml-2">
+                                    <div class="w-3 h-3 bg-red-500 rounded-full"></div>
+                                </div>
                             </div>
                         </div>
                     {% endfor %}
@@ -85,7 +84,6 @@
 
         {# Zone de conversation principale #}
         <div class="flex-1 flex flex-col" id="chat-area">
-            {# Vue par défaut quand aucune conversation n'est sélectionnée #}
             <div class="flex-1 flex items-center justify-center bg-gray-50" id="no-conversation">
                 <div class="text-center">
                     <svg class="mx-auto h-16 w-16 text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -96,17 +94,12 @@
                 </div>
             </div>
 
-            {# Zone de conversation (cachée par défaut) #}
             <div class="flex-1 flex-col overflow-scroll hidden" id="conversation-area">
-                {# En-tête de la conversation #}
                 <div class="bg-white border-b border-gray-200 p-4 flex items-center shadow-sm" id="conversation-header">
                 </div>
 
-                {# Conteneur des messages #}
                 <div class="flex-1 overflow-y-auto p-4 bg-gray-50" id="messages-container">
-                    <div id="messages-list">
-                    </div>
-                    {# Indicateur de chargement #}
+                    <div id="messages-list"></div>
                     <div class="text-center py-4 hidden" id="loading-messages">
                         <div class="inline-flex items-center">
                             <div class="animate-spin h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full mr-2"></div>
@@ -115,14 +108,13 @@
                     </div>
                 </div>
 
-                {# Formulaire d'envoi de message #}
                 <div class="bg-white border-t border-gray-200 p-4 shadow-inner" id="message-form-container">
                     <form id="message-form" class="flex space-x-3">
                         <div class="flex-1 relative">
                             <input id="message-input"
-                                      placeholder="Tapez votre message..."
-                                      class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none transition-all text-sm"
-                                      style="min-height: 44px; max-height: 120px;"/>
+                                   placeholder="Tapez votre message..."
+                                   class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none transition-all text-sm"
+                                   style="min-height: 44px; max-height: 120px;"/>
                         </div>
                         <button type="submit"
                                 class="bg-gray-600 text-white rounded-lg px-6 py-3 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center"
@@ -177,16 +169,22 @@
             border-right: 3px solid #3b82f6;
         }
 
+        #loading-messages {
+            position: sticky;
+            top: 0;
+            background: rgba(247, 250, 252, 0.9);
+            backdrop-filter: blur(5px);
+            z-index: 10;
+        }
+
         @media (max-width: 768px) {
             .flex {
                 flex-direction: column;
             }
-
             .w-1/3 {
             width: 100%;
             height: 40vh;
         }
-
             .flex-1 {
                 height: 60vh;
             }
@@ -198,176 +196,192 @@
     {{ parent() }}
     <script>
         $(document).ready(function() {
-            // Variables globales
             let currentUserId = {{ app.user.id }};
             let activeConversationUserId = null;
             let eventSource = null;
+            let currentPage = 1;
+            let isLoading = false;
+            let hasMore = true;
             const mercureUrl = '{{ mercure_url|default('http://localhost:3000/.well-known/mercure') }}';
+            const pageSize = 20;
 
-            // Sélection des éléments DOM
-            const $conversationsList = $('#conversations-list');
-            const $noConversation = $('#no-conversation');
-            const $conversationArea = $('#conversation-area');
-            const $conversationHeader = $('#conversation-header');
-            const $messagesContainer = $('#messages-container');
-            const $messagesList = $('#messages-list');
-            const $messageForm = $('#message-form');
-            const $messageInput = $('#message-input');
-            const $sendButton = $('#send-button');
-            const $loadingMessages = $('#loading-messages');
-
-            /**
-             * Gère le clic sur une conversation dans la liste
-             */
-            $conversationsList.on('click', '.conversation-item', function() {
-                const userId = $(this).data('user-id');
-                const username = $(this).data('username');
-                loadConversation(userId, username);
-
-                // Marque la conversation comme active
-                $('.conversation-item').removeClass('active');
-                $(this).addClass('active');
+            // Gestion du scroll pour charger plus de messages
+            $('#messages-container').on('scroll', function() {
+                const scrollTop = $(this).scrollTop();
+                if (scrollTop < 100 && !isLoading && hasMore) {
+                    loadMoreMessages();
+                }
             });
 
-            /**
-             * Charge une conversation avec un utilisateur spécifique
-             * @param {number} userId - ID de l'utilisateur avec qui converser
-             * @param {string} username - Nom d'utilisateur pour l'affichage
-             */
-            function loadConversation(userId, username) {
-                if (activeConversationUserId === userId) return;
+            function loadMoreMessages() {
+                if (!activeConversationUserId || isLoading || !hasMore) return;
 
-                // Ferme l'ancienne connexion Mercure
-                if (eventSource) {
-                    eventSource.close();
-                }
-
-                activeConversationUserId = userId;
-
-                // Affiche la zone de conversation
-                $noConversation.hide();
-                $conversationArea.removeClass('hidden').addClass('flex');
-
-                // Met à jour l'en-tête et charge les messages
-                updateConversationHeader(userId, username);
-                loadMessages(userId);
-
-                // Configure Mercure pour les messages en temps réel
-                setupMercure(userId);
-            }
-
-            /**
-             * Met à jour l'en-tête de la conversation avec les infos de l'utilisateur
-             */
-            function updateConversationHeader(userId, username) {
-                const headerHtml = `
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0 h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold">
-                            ${username.charAt(0).toUpperCase()}
-                        </div>
-                        <div class="ml-3">
-                            <h2 class="text-lg font-medium text-gray-800">${username}</h2>
-                        </div>
-                    </div>
-                `;
-                $conversationHeader.html(headerHtml);
-            }
-
-            /**
-             * Charge les messages d'une conversation via API
-             */
-            function loadMessages(userId) {
-                $loadingMessages.removeClass('hidden');
-                $messagesList.empty();
+                isLoading = true;
+                currentPage++;
+                $('#loading-messages').removeClass('hidden');
 
                 $.ajax({
-                    url: `/chat/api/messages/${userId}`,
-                    method: 'GET',
-                    success: function(messages) {
-                        $loadingMessages.addClass('hidden');
-                        messages.forEach(function(message) {
-                            addMessage(message, message.sender_id === currentUserId);
+                    url: `/chat/api/messages/${activeConversationUserId}?page=${currentPage}`,
+                    success: function(response) {
+                        // Sauvegarder la position de scroll actuelle
+                        const currentScrollHeight = $('#messages-list')[0].scrollHeight;
+                        const currentScrollTop = $('#messages-container').scrollTop();
+
+                        // Ajouter les nouveaux messages au début
+                        response.messages.forEach(message => {
+                            prependMessage(message, message.sender_id === currentUserId);
                         });
-                        scrollToBottom();
+
+                        // Calculer la nouvelle position de scroll pour maintenir la position
+                        const newScrollHeight = $('#messages-list')[0].scrollHeight;
+                        const heightDifference = newScrollHeight - currentScrollHeight;
+                        $('#messages-container').scrollTop(currentScrollTop + heightDifference);
+
+                        hasMore = response.hasMore;
                     },
-                    error: function(error) {
-                        $loadingMessages.addClass('hidden');
-                        console.error('Erreur lors du chargement des messages:', error);
+                    error: function() {
+                        console.error('Erreur lors du chargement des messages');
+                    },
+                    complete: function() {
+                        isLoading = false;
+                        $('#loading-messages').addClass('hidden');
                     }
                 });
             }
 
-            /**
-             * Ajoute un message à la liste des messages
-             * @param {object} messageData - Données du message
-             * @param {boolean} isSent - True si le message est envoyé par l'utilisateur courant
-             */
-            function addMessage(messageData, isSent) {
-                const messageDate = new Date(messageData.created_at);
-
-                const months = [
-                    'janvier', 'février', 'mars', 'avril', 'mai', 'juin',
-                    'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'
-                ];
-
-                const day = messageDate.getDate();
-                const month = months[messageDate.getMonth()];
-                const year = messageDate.getFullYear();
-                const time = messageDate.toLocaleTimeString('fr-FR', {hour: '2-digit', minute: '2-digit'});
-
-                const formattedDate = `${day} ${month} ${year} - ${time}`;
-
-                const messageHtml = `
-                    <div class="flex mb-4 ${isSent ? 'justify-end' : 'justify-start'} animate-message">
-                        <div class="max-w-xs md:max-w-md rounded-2xl px-4 py-3 ${isSent ? 'bg-blue-500 text-white' : 'bg-white text-gray-800'} shadow-sm">
-                            <div class="break-words whitespace-pre-wrap">${escapeHtml(messageData.content)}</div>
-                            <div class="text-xs mt-1 ${isSent ? 'text-blue-100' : 'text-gray-500'}">
-                                ${formattedDate}
-                            </div>
-                        </div>
-                    </div>
-                `;
-
-                $messagesList.append(messageHtml);
+            function prependMessage(messageData, isSent) {
+                const messageHtml = createMessageHtml(messageData, isSent);
+                $('#messages-list').prepend(messageHtml);
             }
 
-            /**
-             * Configure Mercure pour recevoir les messages en temps réel
-             */
-            function setupMercure(otherUserId) {
-                const conversationTopic = 'chat/conversation/' +
-                    Math.min(currentUserId, otherUserId) + '-' +
-                    Math.max(currentUserId, otherUserId);
+            function appendMessage(messageData, isSent) {
+                const messageHtml = createMessageHtml(messageData, isSent);
+                $('#messages-list').append(messageHtml);
+            }
 
-                eventSource = new EventSource(mercureUrl + '?topic=' + encodeURIComponent(conversationTopic));
+            function createMessageHtml(messageData, isSent) {
+                const date = new Date(messageData.created_at).toLocaleString('fr-FR', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
 
-                eventSource.onmessage = function(event) {
-                    const data = JSON.parse(event.data);
-                    if (data.type === 'new_message') {
-                        const isSent = data.message.sender_id === currentUserId;
-                        addMessage(data.message, isSent);
+                return `
+            <div class="flex mb-4 ${isSent ? 'justify-end' : 'justify-start'} animate-message" data-message-id="${messageData.id}">
+                <div class="max-w-xs md:max-w-md rounded-2xl px-4 py-3
+                    ${isSent ? 'bg-blue-500 text-white' : 'bg-white text-gray-800'} shadow-sm">
+                    <div class="break-words whitespace-pre-wrap">${escapeHtml(messageData.content)}</div>
+                    <div class="text-xs mt-1 ${isSent ? 'text-blue-100' : 'text-gray-500'}">
+                        ${date}
+                    </div>
+                </div>
+            </div>
+        `;
+            }
+
+            // Gestion de la sélection de conversation
+            $('#conversations-list').on('click', '.conversation-item', function() {
+                const userId = $(this).data('user-id');
+                const username = $(this).data('username');
+                loadConversation(userId, username);
+                $(this).addClass('active').siblings().removeClass('active');
+            });
+
+            function loadConversation(userId, username) {
+                if (activeConversationUserId === userId) return;
+
+                // Reset des variables de pagination
+                currentPage = 1;
+                hasMore = true;
+                activeConversationUserId = userId;
+
+                $('#no-conversation').hide();
+                $('#conversation-area').removeClass('hidden').addClass('flex');
+                updateConversationHeader(username);
+                loadInitialMessages();
+                setupMercure(userId);
+            }
+
+            function updateConversationHeader(username) {
+                $('#conversation-header').html(`
+            <div class="flex items-center">
+                <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold">
+                    ${username.charAt(0).toUpperCase()}
+                </div>
+                <div class="ml-3">
+                    <h2 class="text-lg font-medium text-gray-800">${username}</h2>
+                </div>
+            </div>
+        `);
+            }
+
+            function loadInitialMessages() {
+                $('#messages-list').empty();
+                $('#loading-messages').removeClass('hidden');
+
+                $.ajax({
+                    url: `/chat/api/messages/${activeConversationUserId}?page=1`,
+                    success: function(response) {
+                        // Inverser l'ordre des messages pour affichage chronologique
+                        const messagesInOrder = response.messages.reverse();
+
+                        messagesInOrder.forEach(message => {
+                            appendMessage(message, message.sender_id === currentUserId);
+                        });
+
+                        hasMore = response.hasMore;
                         scrollToBottom();
-                        updateConversationsList();
+                    },
+                    error: function() {
+                        console.error('Erreur lors du chargement initial des messages');
+                    },
+                    complete: function() {
+                        $('#loading-messages').addClass('hidden');
+                    }
+                });
+            }
+
+            function setupMercure(userId) {
+                if (eventSource) eventSource.close();
+
+                const topic = `chat/conversation/${Math.min(currentUserId, userId)}-${Math.max(currentUserId, userId)}`;
+                eventSource = new EventSource(`${mercureUrl}?topic=${encodeURIComponent(topic)}`);
+
+                eventSource.onmessage = function(e) {
+                    const data = JSON.parse(e.data);
+                    if (data.type === 'message') {
+                        // Vérifier que le message n'existe pas déjà
+                        if (!$(`[data-message-id="${data.data.id}"]`).length) {
+                            appendMessage(data.data, data.data.sender_id === currentUserId);
+                            scrollToBottom();
+                        }
                     }
                 };
 
-                eventSource.onerror = function(error) {
-                    console.error('Erreur Mercure:', error);
+                eventSource.onerror = function() {
+                    console.error('Erreur de connexion Mercure');
                 };
             }
 
-            /**
-             * Gère l'envoi d'un nouveau message
-             */
-            $messageForm.on('submit', function(e) {
+            function scrollToBottom() {
+                const container = $('#messages-container');
+                container.scrollTop(container[0].scrollHeight);
+            }
+
+            function escapeHtml(text) {
+                return $('<div/>').text(text).html();
+            }
+
+            // Gestion de l'envoi de message
+            $('#message-form').on('submit', function(e) {
                 e.preventDefault();
-                if (!activeConversationUserId) return;
+                const content = $('#message-input').val().trim();
+                if (!content || !activeConversationUserId) return;
 
-                const content = $messageInput.val().trim();
-                if (!content) return;
-
-                $sendButton.prop('disabled', true);
-                $messageInput.prop('disabled', true);
+                const sendButton = $('#send-button');
+                sendButton.prop('disabled', true);
 
                 $.ajax({
                     url: '{{ path('chat_api_send') }}',
@@ -377,62 +391,30 @@
                         content: content,
                         receiver_id: activeConversationUserId
                     }),
-                    success: function(data) {
-                        if (data.status === 'success') {
-                            $messageInput.val('');
-                            autoResizeTextarea();
-                        }
+                    success: function() {
+                        $('#message-input').val('');
                     },
-                    error: function(error) {
-                        console.error('Erreur:', error);
+                    error: function() {
+                        console.error('Erreur lors de l\'envoi du message');
                     },
                     complete: function() {
-                        $sendButton.prop('disabled', false);
-                        $messageInput.prop('disabled', false);
-                        $messageInput.focus();
+                        sendButton.prop('disabled', false);
+                        $('#message-input').focus();
                     }
                 });
             });
 
-            $messageInput.on('input', autoResizeTextarea);
-
-            /**
-             * Ajuste automatiquement la hauteur du textarea
-             */
-            function autoResizeTextarea() {
-                const textarea = $messageInput[0];
-                textarea.style.height = 'auto';
-                textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
-            }
-
-            $messageInput.on('keydown', function(e) {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    $messageForm.trigger('submit');
-                }
-            });
-
-            /**
-             * Fait défiler la conversation vers le bas
-             */
-            function scrollToBottom() {
-                $messagesContainer.scrollTop($messagesContainer[0].scrollHeight);
-            }
-
-            /**
-             * Échappe le HTML pour prévenir les attaques XSS
-             */
-            function escapeHtml(text) {
-                const div = document.createElement('div');
-                div.textContent = text;
-                return div.innerHTML;
-            }
-
-            // Nettoie la connexion Mercure à la fermeture de la page
-            $(window).on('beforeunload', function() {
-                if (eventSource) {
-                    eventSource.close();
-                }
+            // Recherche d'utilisateurs
+            $('#search-input-user').on('input', function() {
+                const searchTerm = $(this).val().toLowerCase();
+                $('.conversation-item').each(function() {
+                    const username = $(this).data('username').toLowerCase();
+                    if (username.includes(searchTerm)) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+                });
             });
         });
     </script>

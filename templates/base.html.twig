@@ -10,17 +10,61 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
     {% block stylesheets %}
         {{ encore_entry_link_tags('app') }}
     {% endblock %}
+    <style>
+        #toast-container {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
 
-    {% block javascripts %}
-        {{ encore_entry_script_tags('app') }}
-        {{ encore_entry_script_tags('search') }}
-        {{ encore_entry_script_tags('likes') }}
-        {{ encore_entry_script_tags('articles-datatable') }}
-        {{ encore_entry_script_tags('search-user') }}
-    {% endblock %}
+        .toast-notification {
+            width: 320px;
+            max-width: 100%;
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            overflow: hidden;
+            transform: translateX(100%);
+            opacity: 0;
+            transition: all 0.3s ease-out;
+            border-left-width: 4px;
+        }
+
+        .toast-notification.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .notification-badge {
+            display: inline-block;
+            width: 0.75rem;
+            height: 0.75rem;
+            border-radius: 9999px;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @media (max-width: 640px) {
+            #toast-container {
+                width: 90%;
+                left: 5%;
+                right: 5%;
+            }
+        }
+    </style>
+
 </head>
 <body class="flex flex-col min-h-screen" hx-ext="sse">
 <nav class="bg-gray-800 text-white">
@@ -115,7 +159,7 @@
 <div class="container mx-auto p-4">
     {% for label, messages in app.flashes %}
         {% for message in messages %}
-            <div class="flash-message bg-{{ label }}-100 border border-{{ label }}-400 text-{{ label }}-700 px-4 py-3 rounded relative"
+            <div class="flash-message bg-{{ label }}-100 border border-{{ label }}-400 text-{{ label }}-700 px-4 py-3 rounded relative mb-4"
                  role="alert">
                 {{ message }}
                 <span class="absolute top-0 bottom-0 right-0 px-4 py-3">
@@ -141,19 +185,51 @@
 </footer>
 
 <script>
-
-    //closing message flash
     document.addEventListener('DOMContentLoaded', function() {
-        const closeButtons = document.querySelectorAll('.close-flash');
+        {% if app.user %}
+        const mercureUrl = '{{ mercure_url|default('http://localhost:3000/.well-known/mercure') }}';
+        const notificationTopic = `user/{{ app.user.id }}/notifications`;
 
-        closeButtons.forEach(button => {
+        const eventSource = new EventSource(`${mercureUrl}?topic=${encodeURIComponent(notificationTopic)}`);
+
+        eventSource.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+
+            if (data.type === 'new_message_notification') {
+                // TostdeNotif
+                Toast.info(`Nouveau message de ${data.message.sender_name}: ${data.message.content}`, 7000);
+
+                if (typeof updateChatNotification === 'function') {
+                    updateChatNotification(data.message.sender_id);
+                }
+            }
+        };
+
+        eventSource.onerror = function(error) {
+            console.error('Mercure error:', error);
+        };
+        {% endif %}
+
+        // Close flash messages
+        document.querySelectorAll('.close-flash').forEach(button => {
             button.addEventListener('click', function() {
-                const flashMessage = this.closest('.flash-message');
-                flashMessage.style.display = 'none';
+                this.closest('.flash-message').style.opacity = '0';
+                setTimeout(() => {
+                    this.closest('.flash-message').remove();
+                }, 300);
             });
         });
     });
-
 </script>
+
+{% block javascripts %}
+    {{ encore_entry_script_tags('app') }}
+    {{ encore_entry_script_tags('search') }}
+    {{ encore_entry_script_tags('likes') }}
+    {{ encore_entry_script_tags('articles-datatable') }}
+    {{ encore_entry_script_tags('search-user') }}
+    {{ encore_entry_script_tags('messages-notification') }}
+
+{% endblock %}
 </body>
 </html>
