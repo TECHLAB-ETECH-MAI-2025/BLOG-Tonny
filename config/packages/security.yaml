@@ -33,18 +33,18 @@ security:
                 path: /
                 # always_remember_me: true  # Décommentez si vous voulez activer par défaut
 
-    access_control:
-        # Routes API
-        - { path: ^/api/auth/(login|register), roles: PUBLIC_ACCESS }
-        - { path: ^/api/admin, roles: ROLE_ADMIN }
-        - { path: ^/api, roles: ROLE_USER }
-
-        # Routes web
-        - { path: ^/login, roles: PUBLIC_ACCESS }
-        - { path: ^/register, roles: PUBLIC_ACCESS }
-        - { path: ^/reset-password, roles: PUBLIC_ACCESS }
-        - { path: ^/admin, roles: ROLE_ADMIN }
-        - { path: ^/, roles: ROLE_USER }
+#    access_control:
+#        # Routes API
+#        - { path: ^/api/auth/(login|register), roles: PUBLIC_ACCESS }
+#        - { path: ^/api/admin, roles: ROLE_ADMIN }
+#        - { path: ^/api, roles: ROLE_USER }
+#
+#        # Routes web
+#        - { path: ^/login, roles: PUBLIC_ACCESS }
+#        - { path: ^/register, roles: PUBLIC_ACCESS }
+#        - { path: ^/reset-password, roles: PUBLIC_ACCESS }
+#        - { path: ^/admin, roles: ROLE_ADMIN }
+#        - { path: ^/, roles: ROLE_USER }
 
 when@test:
     security:
