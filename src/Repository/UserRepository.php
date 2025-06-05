@@ -53,7 +53,42 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
             ->getQuery()
             ->getResult();
     }
+    /**
+     * Validation stricte du mot de passe
+     */
+    public static function validateStrictPassword(string $password): ?array
+    {
+        if (empty($password)) {
+            return [
+                'error' => 'Veuillez entrer un mot de passe',
+                'code' => 'PASSWORD_REQUIRED'
+            ];
+        }
 
+        if (strlen($password) < 8) {
+            return [
+                'error' => 'Votre mot de passe doit contenir au moins 8 caractères',
+                'code' => 'PASSWORD_TOO_SHORT'
+            ];
+        }
+
+        if (strlen($password) > 4096) {
+            return [
+                'error' => 'Votre mot de passe est trop long',
+                'code' => 'PASSWORD_TOO_LONG'
+            ];
+        }
+
+        // Vérification de la complexité : au moins une majuscule, une minuscule, un chiffre et un caractère spécial
+        if (!preg_match('/^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$ %^&*-]).{8,}$/', $password)) {
+            return [
+                'error' => 'Votre mot de passe doit contenir au moins une lettre majuscule, une lettre minuscule, un chiffre et un caractère spécial',
+                'code' => 'PASSWORD_NOT_COMPLEX_ENOUGH'
+            ];
+        }
+
+        return null;
+    }
     //    /**
     //     * @return User[] Returns an array of User objects
     //     */
