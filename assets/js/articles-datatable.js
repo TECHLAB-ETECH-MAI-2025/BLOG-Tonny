@@ -6,7 +6,7 @@ export function initArticlesDataTable(showDeleted = false) {
     $(document).ready(function () {
         // Charger dynamiquement les catégories pour le filtre
         $.ajax({
-            url: '/api/categories',
+            url: '/get/categories',
             type: 'GET',
             success: function (categories) {
                 const categoryFilter = $('#category-filter');
@@ -28,7 +28,7 @@ export function initArticlesDataTable(showDeleted = false) {
          */
         function initDataTable() {
             // Définir l'URL en fonction du type d'affichage
-            const apiUrl = showDeleted ? '/api/articles/deleted' : '/api/articles';
+            const apiUrl = showDeleted ? '/get/articles/deleted' : '/get/articles';
 
             const table = $('#articles-datatable').DataTable({
                 responsive: true,
@@ -213,7 +213,7 @@ export function initArticlesDataTable(showDeleted = false) {
 
                 if (confirm('Êtes-vous sûr de vouloir supprimer cet article ?')) {
                     $.ajax({
-                        url: `/api/articles/${articleId}/delete`,
+                        url: `/get/articles/${articleId}/delete`,
                         type: 'DELETE',
                         success: function(response) {
                             if (response.success) {
@@ -238,7 +238,7 @@ export function initArticlesDataTable(showDeleted = false) {
 
                 if (confirm('Êtes-vous sûr de vouloir restaurer cet article ?')) {
                     $.ajax({
-                        url: `/api/articles/${articleId}/restore`,
+                        url: `/get/articles/${articleId}/restore`,
                         type: 'POST',
                         success: function(response) {
                             if (response.success) {
@@ -263,7 +263,7 @@ export function initArticlesDataTable(showDeleted = false) {
 
                 if (confirm('ATTENTION : Cette action est irréversible !\n\nÊtes-vous sûr de vouloir supprimer définitivement cet article ?')) {
                     $.ajax({
-                        url: `/api/articles/${articleId}/permanent-delete`,
+                        url: `/get/articles/${articleId}/permanent-delete`,
                         type: 'DELETE',
                         success: function(response) {
                             if (response.success) {
