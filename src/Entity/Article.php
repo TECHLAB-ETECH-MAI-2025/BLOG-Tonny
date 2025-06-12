@@ -7,6 +7,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: ArticleRepository::class)]
@@ -15,33 +16,41 @@ class Article
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['article:read', 'article:list'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank]
     #[Assert\Length(min: 2, max: 255)]
+    #[Groups(['article:read', 'article:list', 'article:write'])]
     private ?string $title = null;
 
     #[ORM\Column(type: Types::TEXT)]
     #[Assert\NotBlank]
+    #[Groups(['article:read', 'article:write','article:list'])]
     private ?string $content = null;
 
     #[ORM\Column]
+    #[Groups(['article:read', 'article:list'])]
     private ?\DateTimeImmutable $createdAt = null;
 
     #[ORM\ManyToMany(targetEntity: Category::class, inversedBy: 'articles')]
+    #[Groups(['article:list', 'article:read'])]
     private Collection $categories;
 
     #[ORM\OneToMany(targetEntity: Comment::class, mappedBy: 'article', cascade: ["persist", "remove"], orphanRemoval: true)]
+    #[Groups(['article:read:full'])]
     private Collection $comments;
 
     /**
      * @var Collection<int, Like>
      */
     #[ORM\OneToMany(targetEntity: Like::class, mappedBy: 'article', orphanRemoval: true)]
+    #[Groups(['article:read:full'])] // Groupe séparé
     private Collection $likes;
 
     #[ORM\Column(nullable: true)]
+    #[Groups(['article:read'])]
     private ?\DateTimeImmutable $deletedAt = null;
 
     public function __construct()
@@ -52,6 +61,27 @@ class Article
         $this->likes = new ArrayCollection();
     }
 
+    // Méthodes getter/setter avec groupes sur les propriétés calculées
+
+    #[Groups(['article:read', 'article:list'])]
+    public function getCommentsCount(): int
+    {
+        return $this->comments->count();
+    }
+
+    #[Groups(['article:read'])]
+    public function getLikesCount(): int
+    {
+        return $this->likes->count();
+    }
+
+    #[Groups(['article:list'])]
+    public function getCategoriesNames(): array
+    {
+        return $this->categories->map(fn($category) => $category->getName())->toArray();
+    }
+
+    // ... reste des méthodes inchangé
     public function getId(): ?int
     {
         return $this->id;
@@ -65,7 +95,6 @@ class Article
     public function setTitle(string $title): static
     {
         $this->title = $title;
-
         return $this;
     }
 
@@ -77,7 +106,6 @@ class Article
     public function setContent(string $content): static
     {
         $this->content = $content;
-
         return $this;
     }
 
@@ -89,7 +117,6 @@ class Article
     public function setCreatedAt(\DateTimeImmutable $createdAt): static
     {
         $this->createdAt = $createdAt;
-
         return $this;
     }
 
@@ -106,14 +133,12 @@ class Article
         if (!$this->categories->contains($category)) {
             $this->categories->add($category);
         }
-
         return $this;
     }
 
     public function removeCategory(Category $category): static
     {
         $this->categories->removeElement($category);
-
         return $this;
     }
 
@@ -131,19 +156,16 @@ class Article
             $this->comments->add($comment);
             $comment->setArticle($this);
         }
-
         return $this;
     }
 
     public function removeComment(Comment $comment): static
     {
         if ($this->comments->removeElement($comment)) {
-            // set the owning side to null (unless already changed)
             if ($comment->getArticle() === $this) {
                 $comment->setArticle(null);
             }
         }
-
         return $this;
     }
 
@@ -166,19 +188,16 @@ class Article
             $this->likes->add($like);
             $like->setArticle($this);
         }
-
         return $this;
     }
 
     public function removeLike(Like $like): static
     {
         if ($this->likes->removeElement($like)) {
-            // set the owning side to null (unless already changed)
             if ($like->getArticle() === $this) {
                 $like->setArticle(null);
             }
         }
-
         return $this;
     }
 
@@ -200,9 +219,9 @@ class Article
     public function setDeletedAt(?\DateTimeImmutable $deletedAt): static
     {
         $this->deletedAt = $deletedAt;
-
         return $this;
     }
+
     /**
      * Soft delete the article
      */

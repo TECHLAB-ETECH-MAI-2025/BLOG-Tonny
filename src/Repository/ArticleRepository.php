@@ -94,6 +94,7 @@ class ArticleRepository extends ServiceEntityRepository
     {
         $qb = $this->createQueryBuilder('a')
             ->where('a.title LIKE :query')
+            ->andWhere('a.deletedAt IS NULL')
             ->setParameter('query', '%' . $query . '%')
             ->orderBy('a.createdAt', 'DESC')
             ->setMaxResults($limit);
