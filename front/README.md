@@ -1,12 +1,39 @@
-# React + Vite
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+# 📘 Blog
 
-Currently, two official plugins are available:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Prérequis
 
-## Expanding the ESLint configuration
+Avant de commencer, assurez-vous d'avoir installé les éléments suivants sur votre machine :
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- [Node.js](https://nodejs.org/) (pour npm)
+
+## Installation
+
+1. **Cloner le dépôt**
+
+   ```bash
+   git clone <URL_DU_DÉPÔT>
+   blog-symfony/front
+   ```
+
+2. **Installer les dépendances**
+
+   ```bash
+   npm install
+   ```
+
+3. **Démarrer l'application en mode développement**
+
+   ```bash
+   npm run dev
+   ```
+
+## Scripts Disponibles
+
+Dans le projet, vous pouvez exécuter les scripts suivants :
+
+- `npm run dev` : Démarre le serveur de développement.
+- `npm run build` : Construit l'application pour la production.
+- `npm run lint` : Exécute ESLint pour analyser le code.
+- `npm run preview` : Aperçu de la version de production.
