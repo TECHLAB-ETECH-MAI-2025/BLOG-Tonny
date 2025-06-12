@@ -16,7 +16,6 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/api/chat')]
-#[IsGranted('ROLE_USER')]
 class ChatController extends AbstractController
 {
     public function __construct(
@@ -39,7 +38,7 @@ class ChatController extends AbstractController
                 'user' => [
                     'id' => $user->getId(),
                     'username' => $user->getUsername(),
-                    // Ajoutez d'autres champs utilisateur si nécessaire
+                    'isOnline' => $user->isOnline(),
                 ],
                 'lastMessage' => $this->messageRepository->findLastMessageBetweenUsers($currentUser, $user)
                     ? [
