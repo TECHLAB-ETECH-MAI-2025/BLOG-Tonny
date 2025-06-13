@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { getCategories, deleteCategory } from '../../api/category';
-import {PageLoader} from "../../Loader.jsx";
+import {PageLoader} from "../shared/Loader.jsx";
 
 export default function CategoryList() {
     const [categories, setCategories] = useState([]);

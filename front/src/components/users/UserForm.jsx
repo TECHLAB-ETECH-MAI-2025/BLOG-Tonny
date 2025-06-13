@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { createUser, getUser, updateUser } from '../../api/users';
-import {PageLoader} from "../../Loader.jsx";
+import {PageLoader} from "../shared/Loader.jsx";
 
 export default function UserForm() {
     const navigate = useNavigate();

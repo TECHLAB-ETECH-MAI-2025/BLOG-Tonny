@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { getArticles, deleteArticle } from '../../api/article';
-import {CardLoader, ListLoader, PageLoader} from "../../Loader.jsx";
+import {CardLoader, ListLoader, PageLoader} from "../shared/Loader.jsx";
 
 export default function ArticleList() {
     const [articles, setArticles] = useState([]);

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getUsers, deleteUser } from '../../api/users';
 import UserItem from './UserItem';
-import {PageLoader} from "../../Loader.jsx";
+import {PageLoader} from "../shared/Loader.jsx";
 
 export default function UserList() {
     const [users, setUsers] = useState([]);

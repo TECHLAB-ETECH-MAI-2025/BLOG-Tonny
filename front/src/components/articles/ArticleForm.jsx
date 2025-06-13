@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getArticle, createArticle, updateArticle } from '../../api/article';
 import { getCategories } from '../../api/category';
-import {PageLoader} from "../../Loader.jsx";
+import {PageLoader} from "../shared/Loader.jsx";
 
 export default function ArticleForm() {
     const { id } = useParams();

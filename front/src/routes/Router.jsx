@@ -1,20 +1,20 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { useAuth } from './context/AuthContext';
-import ProtectedRoute from './components/ProtectedRoute';
-import Login from "./components/auth/Login.jsx";
-import Register from "./components/auth/Register.jsx";
-import UserProfile from "./components/auth/UserProfile.jsx";
-import UserForm from "./components/users/UserForm.jsx";
-import ArticleList from "./components/articles/ArticleList.jsx";
-import ArticleForm from "./components/articles/ArticleForm.jsx";
-import ArticleDetail from "./components/articles/ArticleDetail.jsx";
-import UserList from "./components/users/UserList.jsx";
-import CategoryList from "./components/categories/CategoryList.jsx";
-import CategoryDetail from "./components/categories/CategoryDetail.jsx";
-import CategoryForm from "./components/categories/CategoryForm.jsx";
-import HomePage from "./components/home/HomePage.jsx";
-import NotFound from "./NotFound.jsx";
-import Chat from "./components/chat/Chat.jsx";
+import { useAuth } from '../context/AuthContext.jsx';
+import ProtectedRoute from '../components/ProtectedRoute.jsx';
+import Login from "../components/auth/Login.jsx";
+import Register from "../components/auth/Register.jsx";
+import UserProfile from "../components/auth/UserProfile.jsx";
+import UserForm from "../components/users/UserForm.jsx";
+import ArticleList from "../components/articles/ArticleList.jsx";
+import ArticleForm from "../components/articles/ArticleForm.jsx";
+import ArticleDetail from "../components/articles/ArticleDetail.jsx";
+import UserList from "../components/users/UserList.jsx";
+import CategoryList from "../components/categories/CategoryList.jsx";
+import CategoryDetail from "../components/categories/CategoryDetail.jsx";
+import CategoryForm from "../components/categories/CategoryForm.jsx";
+import HomePage from "../components/home/HomePage.jsx";
+import NotFound from "../base/NotFound.jsx";
+import Chat from "../components/chat/Chat.jsx";
 
 
 const RouterConfig = () => {

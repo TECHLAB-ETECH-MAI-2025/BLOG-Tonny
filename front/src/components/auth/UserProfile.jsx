@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { getCurrentUser, logout } from '../../api/auth';
 import { updateUser } from '../../api/users';
 import {useAuth} from "../../context/AuthContext.jsx";
-import {PageLoader} from "../../Loader.jsx";
+import {PageLoader} from "../shared/Loader.jsx";
 
 export default function UserProfile() {
     const [user, setUser] = useState(null);

@@ -5,7 +5,7 @@ import { getComments, createComment } from '../../api/comment';
 import { formatDate } from "../../utils/formatDate.js";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
-import {PageLoader} from "../../Loader.jsx";
+import {PageLoader} from "../shared/Loader.jsx";
 
 const colors = [
     'bg-purple-100 text-purple-800',

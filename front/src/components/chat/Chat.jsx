@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import messageService from '../../api/message.js';
-import {LoadingSpinner} from "../../Loader.jsx";
+import {LoadingSpinner} from "../shared/Loader.jsx";
 
 const ChatApp = () => {
     const [usersWithLastMessage, setUsersWithLastMessage] = useState([]);
