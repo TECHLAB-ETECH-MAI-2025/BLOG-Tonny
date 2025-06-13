@@ -6,7 +6,7 @@ import { formatDate } from "../../utils/formatDate.js";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import {PageLoader} from "../shared/Loader.jsx";
-
+import {useAuth} from "../../context/AuthContext.jsx";
 const colors = [
     'bg-purple-100 text-purple-800',
     'bg-pink-100 text-pink-800',
@@ -17,13 +17,14 @@ const colors = [
 
 export default function ArticleDetail() {
     const { id } = useParams();
+    const { user } = useAuth();
     const [article, setArticle] = useState(null);
     const [comments, setComments] = useState([]);
     const [showComments, setShowComments] = useState(true);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [commentForm, setCommentForm] = useState({
-        author: '',
+        author: user?.username || '',
         content: ''
     });
     const [commentError, setCommentError] = useState('');
@@ -165,7 +166,7 @@ export default function ArticleDetail() {
                                             name="author"
                                             value={commentForm.author}
                                             onChange={handleInputChange}
-                                            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            className="w-full p-2 capitalize border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                                             required
                                         />
                                     </div>

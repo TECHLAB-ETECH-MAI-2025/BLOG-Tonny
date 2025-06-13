@@ -11,7 +11,7 @@ import { searchArticles } from "../api/search.js";
 import {useAuth} from "../context/AuthContext.jsx";
 
 export default function Layout({ children }) {
-    const { isAuthenticated, handleLogout } = useAuth();
+    const { isAuthenticated, handleLogout, user } = useAuth();
     const location = useLocation();
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState([]);
@@ -150,7 +150,7 @@ export default function Layout({ children }) {
                                 <div className="relative group">
                                     <button className="flex items-center space-x-2 text-gray-600 hover:text-gray-900">
                                         <FontAwesomeIcon icon={faUser} className="h-5 w-5" />
-                                        <span>Mon Profil</span>
+                                        <span className='capitalize'>@{user?.username}</span>
                                     </button>
 
                                     <div className="absolute right-0 w-48 bg-white rounded-md shadow-lg py-1 z-50 hidden group-hover:block">

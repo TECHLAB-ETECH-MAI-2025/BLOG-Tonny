@@ -17,7 +17,10 @@ export default function Login() {
 
         try {
             const data = await login(username, password);
-            handleLogin(data);
+            handleLogin({
+                token: data.token,
+                user: data.user
+            });
         } catch (err) {
             setError(err.error || 'Échec de la connexion');
         } finally {
