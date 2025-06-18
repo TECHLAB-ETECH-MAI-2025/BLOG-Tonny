@@ -2,37 +2,38 @@
 namespace App\Controller\Api;
 
 use App\Entity\Article;
-use App\Entity\Category;
-use App\Repository\ArticleRepository;
 use App\Service\ArticleService;
-use Doctrine\ORM\EntityManagerInterface;
+// use Doctrine\ORM\EntityManagerInterface; // Removed
+use InvalidArgumentException;
+use LogicException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Validator\Exception\ValidationFailedException; // This is for the exception class, not the service interface
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Serializer\SerializerInterface;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
+// use Symfony\Component\Validator\Validator\ValidatorInterface; // Removed
 
 #[Route('/api/articles')]
 final class ArticleController extends AbstractController
 {
     private ArticleService $articleService;
     private SerializerInterface $serializer;
-    private ValidatorInterface $validator;
-    private EntityManagerInterface $em;
+    // private ValidatorInterface $validator; // Removed
+    // private EntityManagerInterface $em; // Removed
 
     public function __construct(
         ArticleService $articleService,
-        SerializerInterface $serializer,
-        ValidatorInterface $validator,
-        EntityManagerInterface $em
+        SerializerInterface $serializer
+        // ValidatorInterface $validator, // Removed
+        // EntityManagerInterface $em // Removed
     ) {
         $this->articleService = $articleService;
         $this->serializer = $serializer;
-        $this->validator = $validator;
-        $this->em = $em;
+        // $this->validator = $validator; // Removed
+        // $this->em = $em; // Removed
     }
 
     /**
@@ -77,53 +78,44 @@ final class ArticleController extends AbstractController
     {
         $data = json_decode($request->getContent(), true);
 
-        if (!$data) {
+        if (null === $data) {
             return $this->json([
-                'error' => 'Données JSON invalides',
+                'error' => 'Invalid JSON data',
                 'code' => 'INVALID_JSON'
             ], Response::HTTP_BAD_REQUEST);
         }
 
-        // Vérifications requises
-        if (!isset($data['title']) || !isset($data['content'])) {
+        try {
+            $article = $this->articleService->createArticleFromApi($data);
+            // Using serializer here to ensure consistent output with groups
+            $jsonArticle = $this->serializer->normalize($article, null, ['groups' => ['article:read', 'category:list']]);
+            return $this->json($jsonArticle, Response::HTTP_CREATED);
+        } catch (InvalidArgumentException $e) {
             return $this->json([
-                'error' => 'Titre et contenu sont requis',
-                'code' => 'MISSING_REQUIRED_FIELDS'
+                'error' => $e->getMessage(),
+                'code' => 'MISSING_REQUIRED_FIELDS' // Or a more generic 'INVALID_INPUT'
             ], Response::HTTP_BAD_REQUEST);
-        }
-
-        $article = new Article();
-        $article->setTitle($data['title']);
-        $article->setContent($data['content']);
-
-        // AJOUT : Gestion des catégories lors de la création
-        if (isset($data['categories']) && is_array($data['categories'])) {
-            $categoryRepository = $this->em->getRepository(Category::class);
-            foreach ($data['categories'] as $categoryId) {
-                $category = $categoryRepository->find($categoryId);
-                if ($category) {
-                    $article->addCategory($category);
-                }
-            }
-        }
-
-        $errors = $this->validator->validate($article);
-        if (count($errors) > 0) {
+        } catch (ValidationFailedException $e) {
             $errorMessages = [];
-            foreach ($errors as $error) {
-                $errorMessages[] = $error->getMessage();
+            foreach ($e->getViolations() as $violation) {
+                $errorMessages[] = [
+                    'property' => $violation->getPropertyPath(),
+                    'message' => $violation->getMessage()
+                ];
             }
             return $this->json([
-                'error' => 'Échec de la validation',
+                'error' => 'Validation failed',
                 'code' => 'VALIDATION_ERROR',
                 'details' => $errorMessages
-            ], Response::HTTP_BAD_REQUEST);
+            ], Response::HTTP_UNPROCESSABLE_ENTITY); // HTTP 422 for validation errors
+        } catch (\Exception $e) {
+            // Generic error for other unexpected issues
+            return $this->json([
+                'error' => 'An unexpected error occurred',
+                'code' => 'INTERNAL_SERVER_ERROR',
+                'details' => $e->getMessage() // Only in dev environment for security
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
-
-        $this->em->persist($article);
-        $this->em->flush();
-
-        return $this->json($article, Response::HTTP_CREATED, [], ['groups' => ['article:read', 'category:list']]);
     }
 
     /**
@@ -153,57 +145,55 @@ final class ArticleController extends AbstractController
     #[IsGranted('ROLE_ADMIN')]
     public function update(Request $request, Article $article): JsonResponse
     {
-        if ($article->isDeleted()) {
-            return $this->json(['error' => 'Impossible de modifier un article supprimé'], Response::HTTP_BAD_REQUEST);
-        }
+        // The check for $article->isDeleted() is now inside the service method,
+        // but we can keep a preliminary check here if desired, or rely on the service.
+        // For this refactor, we'll rely on the service to throw the LogicException.
 
         $data = json_decode($request->getContent(), true);
 
-        if (!$data) {
+        if (null === $data) {
             return $this->json([
-                'error' => 'Données JSON invalides',
+                'error' => 'Invalid JSON data',
                 'code' => 'INVALID_JSON'
             ], Response::HTTP_BAD_REQUEST);
         }
 
-        // Mise à jour des champs
-        if (isset($data['title'])) {
-            $article->setTitle($data['title']);
-        }
-        if (isset($data['content'])) {
-            $article->setContent($data['content']);
-        }
-
-        // AJOUT : Gestion des catégories
-        if (isset($data['categories']) && is_array($data['categories'])) {
-            $article->getCategories()->clear();
-
-            // Ajouter les nouvelles catégories
-            $categoryRepository = $this->em->getRepository(Category::class);
-            foreach ($data['categories'] as $categoryId) {
-                $category = $categoryRepository->find($categoryId);
-                if ($category) {
-                    $article->addCategory($category);
-                }
-            }
-        }
-
-        $errors = $this->validator->validate($article);
-        if (count($errors) > 0) {
+        try {
+            $updatedArticle = $this->articleService->updateArticleFromApi($article, $data);
+            // Using serializer here to ensure consistent output with groups
+            $jsonArticle = $this->serializer->normalize($updatedArticle, null, ['groups' => ['article:read', 'category:list']]);
+            return $this->json($jsonArticle, Response::HTTP_OK);
+        } catch (LogicException $e) { // Catches "Cannot update a soft-deleted article"
+            return $this->json([
+                'error' => $e->getMessage(),
+                'code' => 'UPDATE_DELETED_FORBIDDEN'
+            ], Response::HTTP_FORBIDDEN); // Or HTTP_BAD_REQUEST (400)
+        } catch (InvalidArgumentException $e) { // Should not happen if title/content are optional in update
+            return $this->json([
+                'error' => $e->getMessage(),
+                'code' => 'INVALID_INPUT'
+            ], Response::HTTP_BAD_REQUEST);
+        } catch (ValidationFailedException $e) {
             $errorMessages = [];
-            foreach ($errors as $error) {
-                $errorMessages[] = $error->getMessage();
+            foreach ($e->getViolations() as $violation) {
+                $errorMessages[] = [
+                    'property' => $violation->getPropertyPath(),
+                    'message' => $violation->getMessage()
+                ];
             }
             return $this->json([
-                'error' => 'Échec de la validation',
+                'error' => 'Validation failed',
                 'code' => 'VALIDATION_ERROR',
                 'details' => $errorMessages
-            ], Response::HTTP_BAD_REQUEST);
+            ], Response::HTTP_UNPROCESSABLE_ENTITY); // HTTP 422 for validation errors
+        } catch (\Exception $e) {
+            // Generic error for other unexpected issues
+            return $this->json([
+                'error' => 'An unexpected error occurred',
+                'code' => 'INTERNAL_SERVER_ERROR',
+                'details' => $e->getMessage() // Only in dev environment for security
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
-
-        $this->em->flush();
-
-        return $this->json($article, Response::HTTP_OK, [], ['groups' => ['article:read', 'category:list']]);
     }
 
     /**
@@ -213,6 +203,7 @@ final class ArticleController extends AbstractController
     #[IsGranted('ROLE_ADMIN')]
     public function delete(Request $request, Article $article): JsonResponse
     {
+        // This check can remain as it's a quick exit before calling service
         if ($article->isDeleted()) {
             return $this->json(['error' => 'Article déjà supprimé'], Response::HTTP_BAD_REQUEST);
         }

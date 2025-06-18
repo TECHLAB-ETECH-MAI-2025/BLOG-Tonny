@@ -3,20 +3,32 @@
 namespace App\Service;
 
 use App\Entity\Article;
+use App\Entity\Article;
+use App\Entity\Category;
 use App\Repository\ArticleRepository;
+use App\Repository\CategoryRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
+use InvalidArgumentException; // Added for missing fields
+use Symfony\Component\Validator\Exception\ValidationFailedException; // For validation errors
 
 class ArticleService
 {
     private EntityManagerInterface $entityManager;
     private ArticleRepository $articleRepository;
+    private ValidatorInterface $validator;
+    private CategoryRepository $categoryRepository;
 
     public function __construct(
         EntityManagerInterface $entityManager,
-        ArticleRepository $articleRepository
+        ArticleRepository $articleRepository,
+        ValidatorInterface $validator,
+        CategoryRepository $categoryRepository
     ) {
         $this->entityManager = $entityManager;
         $this->articleRepository = $articleRepository;
+        $this->validator = $validator;
+        $this->categoryRepository = $categoryRepository;
     }
 
     /**
@@ -91,5 +103,96 @@ class ArticleService
     {
         $this->entityManager->remove($article);
         $this->entityManager->flush();
+    }
+
+    /**
+     * Creates a new article from API data.
+     *
+     * @param array $data Deserialized JSON data
+     * @return Article The created article
+     * @throws InvalidArgumentException If required fields are missing or data is invalid
+     * @throws ValidationFailedException If validation fails
+     */
+    public function createArticleFromApi(array $data): Article
+    {
+        if (empty($data['title']) || empty($data['content'])) {
+            throw new InvalidArgumentException('Required fields "title" and "content" are missing.');
+        }
+
+        $article = new Article();
+        $article->setTitle($data['title']);
+        $article->setContent($data['content']);
+        // Optionally set other fields like author if available and handled
+
+        if (isset($data['categories']) && is_array($data['categories'])) {
+            foreach ($data['categories'] as $categoryId) {
+                $category = $this->categoryRepository->find($categoryId);
+                if ($category) {
+                    $article->addCategory($category);
+                }
+                // Optionally handle else: throw exception or log if category not found
+            }
+        }
+
+        $violations = $this->validator->validate($article);
+        if (count($violations) > 0) {
+            // TODO: Consider a custom ValidationException here
+            throw new ValidationFailedException($article, $violations);
+        }
+
+        $this->entityManager->persist($article);
+        $this->entityManager->flush();
+
+        return $article;
+    }
+
+    /**
+     * Updates an existing article from API data.
+     *
+     * @param Article $article The article to update
+     * @param array $data Deserialized JSON data
+     * @return Article The updated article
+     * @throws \LogicException If trying to update a soft-deleted article
+     * @throws InvalidArgumentException If data is invalid
+     * @throws ValidationFailedException If validation fails
+     */
+    public function updateArticleFromApi(Article $article, array $data): Article
+    {
+        if ($article->getDeletedAt() !== null) {
+            throw new \LogicException('Cannot update a soft-deleted article.');
+        }
+
+        if (isset($data['title'])) {
+            $article->setTitle($data['title']);
+        }
+
+        if (isset($data['content'])) {
+            $article->setContent($data['content']);
+        }
+
+        if (isset($data['categories']) && is_array($data['categories'])) {
+            // Clear existing categories
+            foreach ($article->getCategories() as $category) {
+                $article->removeCategory($category);
+            }
+            // Add new categories
+            foreach ($data['categories'] as $categoryId) {
+                $category = $this->categoryRepository->find($categoryId);
+                if ($category) {
+                    $article->addCategory($category);
+                }
+                // Optionally handle else: throw exception or log if category not found
+            }
+        }
+
+        $violations = $this->validator->validate($article);
+        if (count($violations) > 0) {
+            // TODO: Consider a custom ValidationException here
+            throw new ValidationFailedException($article, $violations);
+        }
+
+        $this->entityManager->flush();
+
+        return $article;
     }
 }
